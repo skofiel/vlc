@@ -58,6 +58,8 @@ ColumnLayout {
 
     focus: true
 
+    Navigation.cancelAction: function() { trackMenuController.requestClose() }
+
     onActiveFocusChanged: if (activeFocus) tabBar.forceActiveFocus(Qt.TabFocusReason)
 
     // Ctrl+Tab / Ctrl+Shift+Tab switch between the tabs, from anywhere in the page

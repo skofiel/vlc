@@ -26,7 +26,6 @@ import VLC.Style
 import VLC.Widgets as Widgets
 import VLC.Util
 
-// FIXME: Keyboard navigation needs to be fixed for this Popup.
 T.Popup {
     id: root
 
@@ -38,6 +37,12 @@ T.Popup {
                     , root.parent.width)
 
     height: VLCStyle.dp(320, VLCStyle.scale)
+
+    // Events
+
+    // NOTE: Give the menu a keyboard focus even when it was opened with the mouse, otherwise
+    //       the keys are taken as hotkeys by the interface and never reach the menu.
+    onOpened: Helpers.enforceFocus(stackView, Qt.TabFocusReason)
 
     // Animations
 
@@ -124,9 +129,14 @@ T.Popup {
       signal requestSubtitlePage()
       signal requestPlaybackSpeedPage()
       signal requestBack()
+      signal requestClose()
 
       onRequestBack: {
           stackView.pop()
+      }
+
+      onRequestClose: {
+          root.close()
       }
 
       onRequestAudioPage: {
