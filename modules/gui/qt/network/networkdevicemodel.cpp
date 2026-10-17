@@ -106,9 +106,10 @@ struct NetworkDeviceItem : public NetworkBaseItem
     {
         mrls.erase(std::remove_if(
             mrls.begin(), mrls.end(),
-            [item](const Source& source){
+            [&item](const Source& source){
                 return source.item == item;
-            })
+            }),
+            mrls.end()
         );
 
         if (mrls.empty())
@@ -359,7 +360,8 @@ public:
         if (it == m_items.end())
             return;
 
-        bool needDestruction = (*it)->removeSource(media, mediaSource);
+        // removeSource() returns false when there are no sources left
+        bool needDestruction = !(*it)->removeSource(media, mediaSource);
         if (needDestruction)
         {
             m_items.erase(it);
