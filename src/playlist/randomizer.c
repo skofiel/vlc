@@ -27,6 +27,7 @@
 #endif
 
 #include <assert.h>
+#include <stdckdint.h>
 
 #include <vlc_common.h>
 #include <vlc_rand.h>
@@ -418,6 +419,15 @@ randomizer_Next(struct randomizer *r)
     if (r->next == r->items.size && r->next != r->head)
         r->next = 0;
     return item;
+}
+
+bool
+randomizer_Reserve(struct randomizer *r, size_t count)
+{
+    size_t cap;
+    if (ckd_add(&cap, r->items.size, count))
+        return false;
+    return vlc_vector_reserve(&r->items, cap);
 }
 
 bool

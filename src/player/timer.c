@@ -755,7 +755,7 @@ vlc_player_timer_point_GetNextIntervalDate(const struct vlc_player_timer_point *
     assert(system_now > 0);
     assert(next_interval != VLC_TICK_INVALID);
 
-    const unsigned ts_interval = interpolated_ts / next_interval;
+    const vlc_tick_t ts_interval = interpolated_ts / next_interval;
     const vlc_tick_t ts_next_interval =
         ts_interval * next_interval + next_interval;
 

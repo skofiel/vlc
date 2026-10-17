@@ -89,20 +89,22 @@ int ExtensionsDialogProvider::DestroyExtDialog( extension_dialog_t *p_dialog )
 /**
  * Update/Create/Destroy a dialog
  **/
-void ExtensionsDialogProvider::UpdateExtDialog(extension_dialog_t *p_dialog )
+bool ExtensionsDialogProvider::UpdateExtDialog(extension_dialog_t *p_dialog )
 {
     assert( p_dialog );
 
+    vlc_mutex_lock( &p_dialog->lock );
+    const bool b_kill = p_dialog->b_kill;
     ExtensionDialog *dialog = ( ExtensionDialog* ) p_dialog->p_sys_intf;
-    if( p_dialog->b_kill && !dialog )
+    if( b_kill && !dialog )
     {
         /* This extension could not be activated properly but tried
            to create a dialog. We must ignore it. */
-        return;
+        vlc_mutex_unlock( &p_dialog->lock );
+        return b_kill;
     }
 
-    vlc_mutex_lock( &p_dialog->lock );
-    if( !p_dialog->b_kill )
+    if( !b_kill )
     {
         if (!dialog)
         {
@@ -119,6 +121,33 @@ void ExtensionsDialogProvider::UpdateExtDialog(extension_dialog_t *p_dialog )
     }
     vlc_cond_signal( &p_dialog->cond );
     vlc_mutex_unlock( &p_dialog->lock );
+    return b_kill;
+}
+
+void ExtensionsDialogProvider::QueueUpdate( extension_dialog_t *p_ext_dialog )
+{
+    {
+        QMutexLocker locker( &m_liveLock );
+        vlc_mutex_lock( &p_ext_dialog->lock );
+        if( !p_ext_dialog->b_kill )
+            m_liveDialogs.insert( p_ext_dialog );
+        else if( p_ext_dialog->p_sys_intf == nullptr )
+            /* the extension frees the dialog without waiting */
+            m_liveDialogs.erase( p_ext_dialog );
+        vlc_mutex_unlock( &p_ext_dialog->lock );
+    }
+
+    //use auto connection here
+    // * either we are in extension thread: the extension does not wait for
+    //   the update, so the dialog is only used if it is still alive
+    // * either we are in Qt thread (during destruction for instance) and we want direct connection
+    QMetaObject::invokeMethod(this, [this, p_ext_dialog]() {
+        QMutexLocker locker( &m_liveLock );
+        if( m_liveDialogs.count( p_ext_dialog ) == 0 )
+            return;
+        if( UpdateExtDialog( p_ext_dialog ) )
+            m_liveDialogs.erase( p_ext_dialog );
+    });
 }
 
 /**
@@ -127,20 +156,11 @@ void ExtensionsDialogProvider::UpdateExtDialog(extension_dialog_t *p_dialog )
 static void DialogCallback( extension_dialog_t *p_ext_dialog,
                             void *p_data )
 {
-    (void) p_data;
-
     auto p_edp = static_cast<ExtensionsDialogProvider*>(p_data);
     if (!p_edp)
         return;
 
-    //use auto connection here
-    // * either we are in extension thread and this is safe to carry the extension_dialog_t
-    //   through queued connection as the extension wait that we signal its condition variable
-    // * either we are in Qt thread (during destruction for instance) and we want direct connection
-    QMetaObject::invokeMethod(p_edp, [p_edp, p_ext_dialog]() {
-        p_edp->UpdateExtDialog( p_ext_dialog );
-    });
-
+    p_edp->QueueUpdate( p_ext_dialog );
 }
 
 

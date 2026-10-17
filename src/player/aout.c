@@ -195,6 +195,8 @@ vlc_player_aout_EnableFilter(vlc_player_t *player, const char *name, bool add)
 static void
 vlc_player_aout_AddCallbacks(vlc_player_t *player)
 {
+    assert(player->callbacks_aout == NULL);
+
     audio_output_t *aout = vlc_player_aout_Hold(player);
     if (!aout)
         return;
@@ -203,13 +205,15 @@ vlc_player_aout_AddCallbacks(vlc_player_t *player)
     var_AddCallback(aout, "mute", vlc_player_AoutCallback, player);
     var_AddCallback(aout, "device", vlc_player_AoutCallback, player);
 
-    aout_Release(aout);
+    /* Keep it, so that the callbacks are removed from this aout, and not from
+     * one created later (e.g. by a decoder) */
+    player->callbacks_aout = aout;
 }
 
 static void
 vlc_player_aout_DelCallbacks(vlc_player_t *player)
 {
-    audio_output_t *aout = vlc_player_aout_Hold(player);
+    audio_output_t *aout = player->callbacks_aout;
     if (!aout)
         return;
 
@@ -218,6 +222,7 @@ vlc_player_aout_DelCallbacks(vlc_player_t *player)
     var_DelCallback(aout, "device", vlc_player_AoutCallback, player);
 
     aout_Release(aout);
+    player->callbacks_aout = NULL;
 }
 
 audio_output_t *

@@ -141,8 +141,13 @@ vlc_player_title_list_Create(input_title_t *const *array, size_t count,
                 chapter->name = seekpoint_GetName(seekpoint, chapter_idx,
                                                   chapter_offset);
                 chapter->time = seekpoint->i_time_offset;
-                if (!chapter->name) /* Will trigger the error path */
+                if (!chapter->name)
+                {
+                    /* Will trigger the error path, only the previous
+                     * chapters are initialized */
                     title->chapter_count = chapter_idx;
+                    break;
+                }
             }
         }
         else if (seekpoint_count > 0) /* Will trigger the error path */
@@ -152,8 +157,8 @@ vlc_player_title_list_Create(input_title_t *const *array, size_t count,
 
         if (!title->name || seekpoint_count != title->chapter_count)
         {
-            /* Release titles up to title_idx */
-            titles->count = title_idx;
+            /* Release titles up to title_idx, included */
+            titles->count = title_idx + 1;
             vlc_player_title_list_Release(titles);
             return NULL;
         }

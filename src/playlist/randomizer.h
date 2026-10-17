@@ -127,6 +127,14 @@ randomizer_Select(struct randomizer *randomizer,
                   const vlc_playlist_item_t *item);
 
 /**
+ * Reserve space for count more items.
+ *
+ * Once it succeeds, adding up to count items cannot fail.
+ */
+bool
+randomizer_Reserve(struct randomizer *randomizer, size_t count);
+
+/**
  * Add items to the randomizer.
  *
  * This function should be called when items are added to the playlist.

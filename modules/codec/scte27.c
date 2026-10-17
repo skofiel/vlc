@@ -51,6 +51,8 @@ vlc_module_end ()
 typedef struct
 {
     int     segment_id;
+    /* index of the last segment received */
+    int     segment_index;
     int     segment_size;
     uint8_t *segment_buffer;
     vlc_tick_t segment_date;
@@ -447,19 +449,31 @@ static int Decode(decoder_t *dec, block_t *b)
                 sys->segment_size = 0;
                 sys->segment_date = b->i_pts != VLC_TICK_INVALID ? b->i_pts : b->i_dts;
             } else {
-                if (sys->segment_id != id || sys->segment_size <= 0) {
+                /* The segments are sent in order: as the index is at most
+                 * 4095 and a segment at most 4086 bytes, the message is
+                 * bounded */
+                if (sys->segment_id != id || sys->segment_size <= 0 ||
+                    index != sys->segment_index + 1) {
                     sys->segment_id = -1;
+                    sys->segment_size = 0;
                     break;
                 }
             }
 
             int segment_size = section_length - 1 - 5 - 4;
 
-            sys->segment_buffer = xrealloc(sys->segment_buffer,
-                                           sys->segment_size + segment_size);
+            uint8_t *buffer = realloc(sys->segment_buffer,
+                                      sys->segment_size + segment_size);
+            if (unlikely(buffer == NULL)) {
+                sys->segment_id = -1;
+                sys->segment_size = 0;
+                break;
+            }
+            sys->segment_buffer = buffer;
             memcpy(&sys->segment_buffer[sys->segment_size],
                    &b->p_buffer[9], segment_size);
             sys->segment_size += segment_size;
+            sys->segment_index = index;
 
             if (index == last) {
                 sub = DecodeSubtitleMessage(dec,
@@ -498,6 +512,7 @@ static int Open(vlc_object_t *object)
     if (!sys)
         return VLC_ENOMEM;
     sys->segment_id = -1;
+    sys->segment_index = 0;
     sys->segment_size = 0;
     sys->segment_buffer = NULL;
 
