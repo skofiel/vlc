@@ -8,11 +8,31 @@
 #include "common.h"
 
 static void
+on_media_attachments_added_lock_item(vlc_player_t *player, input_item_t *media,
+                                     input_attachment_t *const *array,
+                                     size_t count, void *data)
+{
+    (void) player; (void) array; (void) count; (void) data;
+
+    /* The item lock must not be held while the event is sent: this would
+     * self-deadlock otherwise (and invert the player -> item lock order). */
+    assert(media != NULL);
+    free(input_item_GetName(media));
+}
+
+static void
 test_attachments(struct ctx *ctx)
 {
     test_log("attachments\n");
 
     vlc_player_t *player = ctx->player;
+
+    static const struct vlc_player_cbs cbs = {
+        .on_media_attachments_added = on_media_attachments_added_lock_item,
+    };
+    vlc_player_listener_id *listener =
+        vlc_player_AddListener(player, &cbs, NULL);
+    assert(listener != NULL);
 
     struct media_params params = DEFAULT_MEDIA_PARAMS(VLC_TICK_FROM_SEC(1));
     params.attachment_count = 99;
@@ -43,6 +63,7 @@ test_attachments(struct ctx *ctx)
         free(name);
     }
 
+    vlc_player_RemoveListener(player, listener);
     test_end(ctx);
 }
 
