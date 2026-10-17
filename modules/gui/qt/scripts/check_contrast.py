@@ -11,6 +11,7 @@
 #   SRCDIR: modules/gui/qt source directory
 
 import argparse
+import colorsys
 import os
 import re
 import sys
@@ -20,7 +21,11 @@ PALETTES = ('makeLightPalette', 'makeDarkPalette')
 FG_ROLES = ('Primary', 'Secondary', 'Link', 'Positive', 'Neutral', 'Negative')
 TEXT_THRESHOLD = 4.5        # WCAG 1.4.3, normal text
 NON_TEXT_THRESHOLD = 3.0    # WCAG 1.4.11, graphical objects
-NON_TEXT_SETS = ('Slider',)
+NON_TEXT_SETS = ('Slider', 'Switch')
+# Foreground roles drawn on another background than Bg.Primary
+FG_BG_OVERRIDES = {
+    ('Switch', 'Secondary'): 'Secondary',   # handle of a checked switch
+}
 
 QT_COLORS = {
     'white': (255, 255, 255), 'black': (0, 0, 0), 'red': (255, 0, 0),
@@ -52,6 +57,37 @@ def split_args(text):
     return args
 
 
+def qt_scale_value(color, factor, lighter):
+    """Approximation of QColor::lighter()/darker() (16 bits HSV)."""
+    h, s, v = colorsys.rgb_to_hsv(*(c / 255 for c in color[:3]))
+    s, v = round(s * 65535), round(v * 65535)
+    if lighter:
+        v = v * factor // 100
+        if v > 65535:
+            s = max(0, s - (v - 65535))
+            v = 65535
+    else:
+        v = v * 100 // factor
+    r, g, b = colorsys.hsv_to_rgb(h, s / 65535, v / 65535)
+    return (round(r * 255), round(g * 255), round(b * 255), color[3])
+
+
+def with_contrast(color, background, ratio):
+    """Same as withContrast() in style/systempalette.cpp"""
+    darken = luminance(background) > 0.5
+    for _ in range(64):
+        if contrast(color, background) >= ratio:
+            break
+        color = qt_scale_value(color, 105, not darken)
+    return color
+
+
+def text_color_on(background):
+    """Same as textColorOn() in style/systempalette.cpp"""
+    dark, white = parse_hex('#121212'), (255, 255, 255, 1.0)
+    return dark if contrast(dark, background) >= contrast(white, background) else white
+
+
 def evaluate(expr, constants):
     """Return (r, g, b, alpha) or None if the expression is not understood."""
     expr = re.sub(r'/\*.*?\*/', '', expr).strip()
@@ -75,6 +111,18 @@ def evaluate(expr, constants):
             color = evaluate(args[0], constants)
             if color is not None:
                 return color[:3] + (float(args[1]),)
+    m = re.fullmatch(r'withContrast\s*\((.*)\)', expr, re.DOTALL)
+    if m:
+        args = split_args(m.group(1))
+        if len(args) == 3:
+            color, background = (evaluate(a, constants) for a in args[:2])
+            if color is not None and background is not None:
+                return with_contrast(color, background, float(args[2]))
+    m = re.fullmatch(r'textColorOn\s*\((.*)\)', expr, re.DOTALL)
+    if m:
+        background = evaluate(m.group(1), constants)
+        if background is not None:
+            return text_color_on(background)
     return None
 
 
@@ -140,15 +188,16 @@ def check(srcdir):
         view_bg = colors.get(('View', 'Bg', 'Primary', 'Normal'))
         colorsets = sorted({key[0] for key in colors})
         for cs in colorsets:
-            bg = colors.get((cs, 'Bg', 'Primary', 'Normal'), view_bg)
-            if bg is None or view_bg is None:
+            if view_bg is None:
                 continue
-            bg = blend(bg, blend(view_bg, (255, 255, 255, 1.0)))
             threshold = NON_TEXT_THRESHOLD if cs in NON_TEXT_SETS else TEXT_THRESHOLD
             for role in FG_ROLES:
                 fg = colors.get((cs, 'Fg', role, 'Normal'))
                 if fg is None or fg[3] == 0:
                     continue
+                bg_role = FG_BG_OVERRIDES.get((cs, role), 'Primary')
+                bg = colors.get((cs, 'Bg', bg_role, 'Normal'), view_bg)
+                bg = blend(bg, blend(view_bg, (255, 255, 255, 1.0)))
                 ratio = contrast(blend(fg, bg), bg)
                 results.append((f'{palette} {cs} Fg.{role}', ratio, threshold))
     return results

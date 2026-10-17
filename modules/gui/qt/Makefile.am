@@ -281,6 +281,7 @@ libqt_plugin_la_SOURCES = \
 	style/qtthemeprovider.hpp \
 	style/colorcontext.cpp \
 	style/colorcontext.hpp \
+	style/contrast.hpp \
 	style/systempalette.cpp \
 	style/systempalette.hpp \
 	style/vlcicons.cpp 	style/vlcicons.hpp \

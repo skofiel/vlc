@@ -1,15 +1,2 @@
 # Color pairs known to be below the WCAG contrast threshold,
 # cf. scripts/check_contrast.py. Remove the lines once fixed.
-light ButtonAccent Fg.Primary
-light Slider Fg.Primary
-light Switch Fg.Secondary
-light View Fg.Link
-light View Fg.Positive
-light View Fg.Neutral
-light View Fg.Negative
-dark ButtonAccent Fg.Primary
-dark Slider Fg.Positive
-dark Slider Fg.Neutral
-dark Slider Fg.Negative
-dark Switch Fg.Secondary
-dark View Fg.Negative
