@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
             filename = argv[argc - 1];
             break;
         default:
-            fprintf(stderr, "Usage: [VLC_TARGET=demux] %s <filename>\n", argv[0]);
+            fprintf(stderr, "Usage: [VLC_TARGET=demux] [VLC_TARGET_URL=url] %s <filename>\n", argv[0]);
             return 1;
     }
 

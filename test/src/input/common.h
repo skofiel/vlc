@@ -37,6 +37,10 @@ struct vlc_run_args
 
     /* true to test demux controls */
     bool test_demux_controls;
+
+    /* URL given to the demuxer, some probes (playlists for example) check its
+     * extension. NULL to use a dummy URL */
+    const char *url;
 };
 
 void vlc_run_args_init(struct vlc_run_args *args);

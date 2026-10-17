@@ -41,6 +41,7 @@ void vlc_run_args_init(struct vlc_run_args *args)
 
     args->name = getenv("VLC_TARGET");
     args->test_demux_controls = getenv_atoi("VLC_DEMUX_CONTROLS");
+    args->url = getenv("VLC_TARGET_URL");
 }
 
 libvlc_instance_t *libvlc_create(const struct vlc_run_args *args)

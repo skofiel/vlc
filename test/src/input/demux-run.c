@@ -297,13 +297,34 @@ static int demux_process_stream(const struct vlc_run_args *args, stream_t *s)
     if (out == NULL)
         return -1;
 
-    demux_t *demux = demux_New(VLC_OBJECT(s), name, "vlc://nop", s, out);
+    const char *url = args->url != NULL ? args->url : "vlc://nop";
+    demux_t *demux = demux_New(VLC_OBJECT(s), name, url, s, out);
     if (demux == NULL)
     {
         es_out_Delete(out);
         vlc_stream_Delete(s);
         fprintf(stderr, "Error: cannot create demultiplexer: %s\n", name);
         return -1;
+    }
+
+    if (demux->pf_demux == NULL && demux->pf_readdir != NULL)
+    {
+        /* Directory/playlist demuxer */
+        int ret = -1;
+        input_item_t *item = input_item_New(url, NULL);
+        if (item != NULL)
+        {
+            input_item_node_t *node = input_item_node_Create(item);
+            if (node != NULL)
+            {
+                ret = vlc_stream_ReadDir(demux, node) == VLC_SUCCESS ? 0 : -1;
+                input_item_node_Delete(node);
+            }
+            input_item_Release(item);
+        }
+        demux_Delete(demux);
+        es_out_Delete(out);
+        return ret;
     }
 
     uintmax_t i = 0;
@@ -467,6 +488,7 @@ int vlc_demux_process_memory(const struct vlc_run_args *args,
     f(demux_rawvid) \
     f(demux_rawaud) \
     f(demux_ogg) \
+    f(demux_playlist_playlist) \
     DECODER_PLUGINS(f)
 
 #ifdef HAVE_DVBPSI
