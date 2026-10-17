@@ -1841,6 +1841,31 @@ La especificación del rediseño pide una barra lateral sin subentradas: las sec
 
 **Batería completa tras la fase 5:** pasan 110 tests y fallan 4 de los 8 ajenos de siempre (`http_tunnel_test`, `test_modules_codec_hxxx_helper`, `test_qt_dialog_model` y `test_qt_renderer_manager`). Los otros 4 pasan ahora porque el build tiene medialibrary, png y jpeg.
 
+**Fase 6: hecha (secciones 4.11 y 4.13 del análisis del diseño).**
+
+| Tarea | Commit | Validación |
+|---|---|---|
+| Acento configurable en caliente | `c8a408d` qt: allow to change the accent color at runtime | Al elegir otro acento (p. ej. rojo), toda la interfaz cambia sin reiniciar. Test `contrast` OK. Si el color no es válido, se vuelve al acento por defecto |
+| Ajustes globales con búsqueda | `2670935` qt: global settings with search | Diálogo «Preferences» de la barra lateral, con las categorías App / Media / System del diseño. Cada opción usa su control: interruptor ON/OFF, lista, número, deslizador, texto o color. La búsqueda recorre todas las categorías. «Advanced Options ›» abre las preferencias de siempre |
+| Acento en el asistente de primer arranque | `b87c4a9` qt: first run wizard: choose the accent color | Los 9 colores del diseño aparecen bajo los temas; se comparten con los ajustes a través de `MainCtx.accentColorPresets` |
+
+**Notas de la fase 6:**
+- **`SettingsModel`:**
+  - es una selección curada de opciones reales de VLC (unas 90);
+  - omite las que no existen en el build (módulo no compilado) y las obsoletas: `add_obsolete_*` deja la opción sin texto, y así se detecta;
+  - aplica cada cambio al momento (`reloadPrefs` para las de la interfaz) y escribe el archivo de configuración al cerrar.
+- **Fallos encontrados al implementarla:**
+  - `config_GetType()` devuelve el tipo `VLC_VAR_*`, no el `CONFIG_ITEM_*`; el modelo guarda el de la opción;
+  - los controles dentro del popup salían magenta porque no encontraban paleta, como ya pasaba en el menú de pistas.
+- **Plurales:** en VLC, `qsTr(singular, plural, n)` se traduce con `ngettext`; el patrón de Qt `qsTr("%n item(s)", "", n)` devuelve una cadena vacía. Se ha usado la forma de VLC.
+
+**Reservas de la fase 6:**
+- **Categorías vacías:** Library y Extensions no tienen opciones simples; la página remite a las opciones avanzadas. Las carpetas de la biblioteca y los complementos tienen sus propios diálogos.
+- **Atajos:** «Edit Keyboard Shortcuts» de Controls no está; los atajos siguen en las preferencias avanzadas.
+- **Asistente de primer arranque:** sigue siendo el de Qt Widgets (tema claro) con sus páginas; solo se ha añadido el acento. La vista previa en vivo del reproductor del diseño no está.
+
+**Batería completa tras la fase 6:** 110 OK y los mismos 4 fallos ajenos.
+
 ### 7.3 Icono de la aplicación
 
 Commit `2f45fdd` (icons: new application icon). A petición del propietario, el icono de VLC (el cono) se sustituye por un «play» de tres trazos entrelazados, redibujado en vectorial a partir de la propuesta inicial:
