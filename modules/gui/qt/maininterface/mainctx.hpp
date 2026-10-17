@@ -128,6 +128,7 @@ class MainCtx : public QObject
     Q_PROPERTY(ControlbarProfileModel* controlbarProfileModel READ controlbarProfileModel CONSTANT FINAL)
     Q_PROPERTY(bool hasAcrylicSurface READ hasAcrylicSurface NOTIFY hasAcrylicSurfaceChanged FINAL)
     Q_PROPERTY(bool smoothScroll READ smoothScroll NOTIFY smoothScrollChanged FINAL)
+    Q_PROPERTY(bool reduceMotion READ reduceMotion NOTIFY reduceMotionChanged FINAL)
     Q_PROPERTY(QWindow* intfMainWindow READ intfMainWindow CONSTANT FINAL)
     Q_PROPERTY(bool useGlobalShortcuts READ getUseGlobalShortcuts WRITE setUseGlobalShortcuts NOTIFY useGlobalShortcutsChanged FINAL)
     Q_PROPERTY(int maxVolume READ maxVolume NOTIFY maxVolumeChanged FINAL)
@@ -181,6 +182,7 @@ public:
     inline qt_intf_t* getIntf() const { return p_intf; }
     inline vlc_preparser_t *getNetworkPreparser() const { return m_network_preparser; };
     bool smoothScroll() const { return m_smoothScroll; }
+    bool reduceMotion() const { return m_reduceMotion; }
 
     VLCSystray* getSysTray() { return m_systray.get(); }
 
@@ -485,6 +487,7 @@ protected:
     bool m_acrylicActive = false;
 
     bool m_smoothScroll = true;
+    bool m_reduceMotion = false;
 
     bool m_preferHotkeys = false;
 
@@ -604,6 +607,7 @@ signals:
     void acrylicActiveChanged();
 
     void smoothScrollChanged();
+    void reduceMotionChanged();
 
     void preferHotkeysChanged();
 

@@ -456,6 +456,8 @@ void MainCtx::loadPrefs(const bool callSignals)
 
     loadFromVLCOption(m_smoothScroll, "qt-smooth-scrolling", &MainCtx::smoothScrollChanged);
 
+    loadFromVLCOption(m_reduceMotion, "qt-reduce-motion", &MainCtx::reduceMotionChanged);
+
     loadFromVLCOption(m_maxVolume, "qt-max-volume", &MainCtx::maxVolumeChanged);
 
     loadFromVLCOption(m_pinVideoControls, "qt-pin-controls", &MainCtx::pinVideoControlsChanged);

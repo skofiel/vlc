@@ -60,6 +60,7 @@ const OptionDefinition options[] = {
     { "interface", N_("System"), "qt-system-tray" },
     { "interface", N_("System"), "qt-pause-minimized" },
     { "interface", N_("System"), "qt-smooth-scrolling" },
+    { "interface", N_("Accessibility"), "qt-reduce-motion" },
 
     { "privacy", N_("History"), "qt-recentplay" },
     { "privacy", N_("History"), "qt-continue" },

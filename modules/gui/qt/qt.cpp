@@ -274,6 +274,10 @@ static void ShowDialog   ( intf_thread_t *, int, int, intf_dialog_args_t * );
 #define QT_COMPOSITOR_TEXT N_("Select Qt video integration backend")
 #define QT_COMPOSITOR_LONGTEXT N_("Select Qt video integration backend. Use with care, the interface may not start if an incompatible compositor is selected")
 
+#define REDUCE_MOTION_TEXT N_( "Reduce motion" )
+#define REDUCE_MOTION_LONGTEXT N_( "Disable the animations of the interface, such as the transitions " \
+                                   "and the scrolling of the long titles." )
+
 #define SMOOTH_SCROLLING_TEXT N_( "Use smooth scrolling in Flickable based views" )
 #define SMOOTH_SCROLLING_LONGTEXT N_( "Deactivating this option will disable smooth scrolling in Flickable based views (such as the Play Queue). " \
                                       "This option is only respected with a scroll handler, see option `qt-use-scroll-handler`." )
@@ -471,6 +475,8 @@ vlc_module_begin ()
             change_integer_list( i_raise_list, psz_raise_list_text )
 
     add_bool( "qt-smooth-scrolling", true, SMOOTH_SCROLLING_TEXT, SMOOTH_SCROLLING_LONGTEXT )
+
+    add_bool( "qt-reduce-motion", false, REDUCE_MOTION_TEXT, REDUCE_MOTION_LONGTEXT )
 
     add_bool( "qt-use-scroll-handler", true, SCROLL_HANDLER_TEXT, SCROLL_HANDLER_LONGTEXT )
 

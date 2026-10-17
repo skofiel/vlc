@@ -299,17 +299,20 @@ QtObject {
 
     // durations. Values are aligned on Kirigami
 
+    // the animations are disabled, and the infinite ones must not run
+    readonly property bool reduceMotion: MainCtx.reduceMotion
+
     //should be used for animation that benefits from a longer animation than duration_long
-    readonly property int duration_veryLong: 400
+    readonly property int duration_veryLong: reduceMotion ? 0 : 400
 
     //should be used for longer animation (opening/closing panes & dialogs)
-    readonly property int duration_long: 200
+    readonly property int duration_long: reduceMotion ? 0 : 200
 
     //should be used for short animations (hovering, accuenting UI event)
-    readonly property int duration_short: 100
+    readonly property int duration_short: reduceMotion ? 0 : 100
 
     //should be used for near instant animations
-    readonly property int duration_veryShort: 50
+    readonly property int duration_veryShort: reduceMotion ? 0 : 50
 
     /* human time reaction, how much time before the user should be informed that something
      * is going on, or before something should be automatically automated,

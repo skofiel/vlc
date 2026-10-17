@@ -48,7 +48,7 @@ Widgets.IconToolButton {
 
         SequentialAnimation on color {
             loops: Animation.Infinite
-            running: control.enabled && Player.recording
+            running: control.enabled && Player.recording && !VLCStyle.reduceMotion
 
             ColorAnimation  {
                 from:  "#FFFF0000"
