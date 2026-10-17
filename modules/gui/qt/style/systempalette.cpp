@@ -847,9 +847,10 @@ void SystemPalette::makeDarkPalette()
         setColor(CS, C::Bg, C::Primary, C::Normal, Qt::black);
 
         setColor(CS, C::Fg, C::Primary, C::Normal, orange500);
-        setColor(CS, C::Fg, C::Positive, C::Normal, "#6CCB5F");
+        // also used by the volume wedge gradient
+        setColor(CS, C::Fg, C::Positive, C::Normal, "#2EB82E");
         setColor(CS, C::Fg, C::Neutral, C::Normal, "#FCE100");
-        setColor(CS, C::Fg, C::Negative, C::Normal, "#FF99A4");
+        setColor(CS, C::Fg, C::Negative, C::Normal, "#E53935");
     }
 
     //Combo box

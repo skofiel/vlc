@@ -35,6 +35,11 @@ T.Pane {
         return (volControl.position > _fullvolpos) ? theme.fg.negative : theme.fg.primary
     }
 
+    // gradient of the volume wedge: low volume, 100% (accent), maximum
+    readonly property color _lowColor: volControl.colorContext.fg.positive
+    readonly property color _fullColor: volControl.colorContext.fg.primary
+    readonly property color _maxColor: volControl.colorContext.fg.negative
+
     readonly property var _player: paintOnly ? ({ muted: false, volume: .5 }) : Player
     readonly property int _maxvol: MainCtx.maxVolume
     readonly property real _fullvolpos: 100 / _maxvol
@@ -97,8 +102,7 @@ T.Pane {
         Widgets.SliderExt {
             id: volControl
 
-            // FIXME: use VLCStyle
-            implicitWidth: VLCStyle.dp(100, VLCStyle.scale)
+            implicitWidth: VLCStyle.volumeWedge_width
 
             // WARNING: Directly setting the insets break handle and background positioning.
             Binding on topInset {
@@ -235,21 +239,95 @@ T.Pane {
                 }
             }
 
+            // the volume is shown as a wedge, there is no visible handle
+            handle: Item {
+                x: volControl.leftPadding + volControl.visualPosition * volControl.availableWidth
+                y: volControl.topPadding + (volControl.availableHeight - height) / 2
+
+                implicitWidth: 0
+                implicitHeight: VLCStyle.volumeWedge_height
+            }
+
+            background: Canvas {
+                id: wedge
+
+                x: volControl.leftPadding
+                y: volControl.topPadding + (volControl.availableHeight - height) / 2
+
+                implicitWidth: VLCStyle.volumeWedge_width
+                implicitHeight: VLCStyle.volumeWedge_height
+
+                width: volControl.availableWidth
+                height: implicitHeight
+
+                readonly property real position: volControl.visualPosition
+                readonly property real fullPosition: Math.min(root._fullvolpos, 1.0)
+                readonly property color emptyColor: Qt.alpha(volControl.colorContext.fg.secondary, 0.2)
+                readonly property color markColor: volControl.colorContext.fg.secondary
+                readonly property color focusColor: volControl.colorContext.visualFocus
+                readonly property bool focused: volControl.visualFocus
+
+                onPositionChanged: requestPaint()
+                onFullPositionChanged: requestPaint()
+                onEmptyColorChanged: requestPaint()
+                onFocusedChanged: requestPaint()
+                Connections {
+                    target: root
+                    function on_LowColorChanged() { wedge.requestPaint() }
+                    function on_FullColorChanged() { wedge.requestPaint() }
+                    function on_MaxColorChanged() { wedge.requestPaint() }
+                }
+
+                onPaint: {
+                    const ctx = getContext("2d")
+                    const w = width
+                    const h = height
+                    ctx.reset()
+
+                    // right triangle, growing from left to right
+                    ctx.beginPath()
+                    ctx.moveTo(0, h)
+                    ctx.lineTo(w, h)
+                    ctx.lineTo(w, 0)
+                    ctx.closePath()
+
+                    ctx.save()
+                    ctx.clip()
+
+                    ctx.fillStyle = emptyColor
+                    ctx.fillRect(0, 0, w, h)
+
+                    const gradient = ctx.createLinearGradient(0, 0, w, 0)
+                    gradient.addColorStop(0, root._lowColor)
+                    gradient.addColorStop(fullPosition, root._fullColor)
+                    gradient.addColorStop(1, root._maxColor)
+                    ctx.fillStyle = gradient
+                    ctx.fillRect(0, 0, position * w, h)
+
+                    ctx.restore()
+
+                    if (focused) {
+                        ctx.strokeStyle = focusColor
+                        ctx.lineWidth = VLCStyle.dp(1, VLCStyle.scale)
+                        ctx.stroke()
+                    }
+                }
+            }
+
             Rectangle{
                 id: tickmark
 
                 parent: volControl.background
 
                 x : parent.width * root._fullvolpos
+                y: parent.height * (1 - root._fullvolpos) - VLCStyle.dp(2, VLCStyle.scale)
                 width: VLCStyle.dp(1, VLCStyle.scale)
-                height: parent.height
-                radius: VLCStyle.dp(2, VLCStyle.scale)
+                height: parent.height - y
 
                 // NOTE: This shouldn't be visible when the volume stops before a 100.
                 visible: (root._maxvol > 100)
 
-                // FIXME: tick mark is not visible when it's over slider
-                color: root.sliderColor
+                color: wedge.markColor
 
                 // NOTE: This is a helper to select the default volume when clicking on the
                 //       tickmark. We apply a higher clamp value to achieve that behavior on

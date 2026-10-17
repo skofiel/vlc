@@ -185,6 +185,10 @@ QtObject {
     readonly property int seekBar_height: MainCtx.dp(14, scale)
     readonly property int seekBar_handleWidth: MainCtx.dp(5, scale)
 
+    // volume wedge of the control bar
+    readonly property int volumeWedge_width: MainCtx.dp(72, scale)
+    readonly property int volumeWedge_height: MainCtx.dp(18, scale)
+
     // play/pause pill of the control bar
     readonly property int play_pill_width: MainCtx.dp(54, scale)
     readonly property int play_pill_height: MainCtx.dp(30, scale)
