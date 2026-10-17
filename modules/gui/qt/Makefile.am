@@ -1113,6 +1113,8 @@ libqml_module_medialibrary_a_QML = \
 	medialibrary/qml/PlaylistMediaList.qml \
 	medialibrary/qml/PlaylistMedia.qml \
 	medialibrary/qml/PlaylistMediaDisplay.qml \
+	medialibrary/qml/PlaylistsDisplay.qml \
+	medialibrary/qml/RecentsDisplay.qml \
 	medialibrary/qml/VideoPlaylistsDisplay.qml \
 	medialibrary/qml/VideoGridItem.qml \
 	medialibrary/qml/VideoInfoExpandPanel.qml \
@@ -1154,7 +1156,6 @@ libqml_module_network_a_QML = \
 	network/qml/BrowseHomeDisplay.qml \
 	network/qml/BrowseTreeDisplay.qml \
 	network/qml/BrowseTreeHeader.qml \
-	network/qml/DiscoverDisplay.qml \
 	network/qml/DiscoverUrlDisplay.qml \
 	network/qml/NetworkAddressbar.qml \
 	network/qml/NetworkGridItem.qml \

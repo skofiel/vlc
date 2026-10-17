@@ -46,6 +46,7 @@ RowLayout {
     focus: true
 
     Navigation.leftItem: button
+    Navigation.cancelAction: function() { trackMenuController.requestBack() }
 
     // Children
 

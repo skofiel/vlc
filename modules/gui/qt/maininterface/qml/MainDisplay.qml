@@ -120,11 +120,11 @@ FocusScope {
             name: "network",
             url: "qrc:///qt/qml/VLC/Network/BrowseDisplay.qml"
         }, {
-            name: "discover",
-            url: "qrc:///qt/qml/VLC/Network/DiscoverDisplay.qml"
+            name: "playlists",
+            url: "qrc:///qt/qml/VLC/MediaLibrary/PlaylistsDisplay.qml"
         }, {
-            name: "mlsettings",
-            url: "qrc:///qt/qml/VLC/MediaLibrary/MLFoldersSettings.qml"
+            name: "recent",
+            url: "qrc:///qt/qml/VLC/MediaLibrary/RecentsDisplay.qml"
         }
     ]
 

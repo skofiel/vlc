@@ -68,7 +68,8 @@ T.ItemDelegate {
             "video": "videoNavBar",
             "music": "musicNavBar",
             "network": "browseNavBar",
-            "discover": "discoverNavBar"
+            "playlists": "playlistsNavBar",
+            "recent": "recentNavBar"
         }
         const id = navBarIds[model.uri[0]]
         if (id !== undefined)

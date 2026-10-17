@@ -51,10 +51,34 @@ Widgets.PageLoader {
         name: "browse",
         component: browseComponent,
         guard: function (prop) { return !!prop.tree }
+    }, {
+        name: "services",
+        url: "qrc:///qt/qml/VLC/Network/ServicesHomeDisplay.qml"
+    }, {
+        name: "url",
+        url: "qrc:///qt/qml/VLC/Network/DiscoverUrlDisplay.qml"
     }]
 
     Accessible.role: Accessible.Client
     Accessible.name: qsTr("Browse view")
+
+    // the discovery pages are loaded from their url, they are not bound in a component
+    onCurrentItemChanged: {
+        if (!currentItem)
+            return
+
+        if (currentItem.displayMarginBeginning !== undefined)
+            currentItem.displayMarginBeginning = Qt.binding(() => { return root.displayMarginBeginning })
+
+        if (currentItem.displayMarginEnd !== undefined)
+            currentItem.displayMarginEnd = Qt.binding(() => { return root.displayMarginEnd })
+
+        if (currentItem.enableBeginningFade !== undefined)
+            currentItem.enableBeginningFade = Qt.binding(() => { return root.enableBeginningFade })
+
+        if (currentItem.enableEndFade !== undefined)
+            currentItem.enableEndFade = Qt.binding(() => { return root.enableEndFade })
+    }
 
     //functions
 
