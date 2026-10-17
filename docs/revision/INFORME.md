@@ -1951,6 +1951,18 @@ La especificación del rediseño pide una barra lateral sin subentradas: las sec
 
 **Batería completa tras la fase 8:** 110 OK y los mismos 4 fallos ajenos.
 
+**Hallazgos nuevos de las fases 7 y 8: corregidos.** Fusionados en `design/rediseno` (`b7ec39d`).
+
+| Hallazgo | Commit | Validación |
+|---|---|---|
+| Fuga intermitente al grabar (1) | `7633917` mux: asf: release the track when it cannot be added | `AddStream()` no liberaba la pista con un códec de audio no admitido ni al fallar una reserva, y en modo HTTP `DelStream()` la quitaba de la lista sin liberarla. La grabación prueba el multiplexor ASF con cualquier pista (296 bytes, el tamaño de `asf_track_t`) |
+| Fuga intermitente al grabar (2) | `1199104` sout: release the options of an access output that fails to open | Al fallar la apertura, `sout_AccessOutNew()` no liberaba las opciones del acceso (`no-overwrite`, que la grabación usa al probar nombres de archivo). `test_libvlc_media_player_record` pasa 60 veces seguidas con LeakSanitizer; antes fallaba más o menos una vez de cada seis |
+| Acceso tras destruir en el compositor X11 | `604ba92` qt: x11 compositor: disconnect the visibility handler before the window is destroyed | `~QWindow()` oculta la ventana y llamaba al manejador cuando la parte derivada ya estaba destruida. UBSan ya no informa de nada al cerrar |
+
+Batería completa: 110 OK y los mismos 4 fallos ajenos.
+
+**Instalador de Windows.** Se ha compilado `vlc-4.0.0-dev-win64.exe` (NSIS, 65 MB) desde `b7785c9`, con la imagen `vlc-debian-win64-posix` de la CI y sus dependencias precompiladas. El código se monta en `/builds/videolan/vlc`, porque las rutas de `target_qt.conf` dependen de esa profundidad. ninja y meson se instalan desde PyPI, porque las descargas de GitHub no están permitidas en el entorno. El `.msi` no se genera, porque WiX falla bajo wine.
+
 ### 7.3 Icono de la aplicación
 
 Commit `2f45fdd` (icons: new application icon). A petición del propietario, el icono de VLC (el cono) se sustituye por un «play» de tres trazos entrelazados, redibujado en vectorial a partir de la propuesta inicial:
