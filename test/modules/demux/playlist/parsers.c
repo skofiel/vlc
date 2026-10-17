@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 /*****************************************************************************
- * parsers.c: playlist parsers unit testing (RAM, B4S)
+ * parsers.c: playlist parsers unit testing (RAM, B4S, XSPF)
  *****************************************************************************
  * Copyright (C) 2026 VLC authors and VideoLAN
  *****************************************************************************/
@@ -103,6 +103,28 @@ static int check_b4s0(const char *run, const input_item_node_t *p_node)
     return 0;
 }
 
+#define XSPF_URL "http://example.com/playlist.xspf"
+
+/* A huge track id must not be used as an array size */
+static const char xspfplaylist0[] =
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    "<playlist xmlns=\"http://xspf.org/ns/0/\" "
+    "xmlns:vlc=\"http://www.videolan.org/vlc/playlist/ns/0/\" version=\"1\">"
+    "<trackList>"
+    "<track><location>http://example.com/a.mp3</location>"
+    "<extension application=\"http://www.videolan.org/vlc/playlist/0\">"
+    "<vlc:id>2000000000</vlc:id></extension></track>"
+    "<track><location>http://example.com/b.mp3</location>"
+    "<extension application=\"http://www.videolan.org/vlc/playlist/0\">"
+    "<vlc:id>0</vlc:id></extension></track>"
+    "</trackList></playlist>\n";
+
+static int check_xspf0(const char *run, const input_item_node_t *p_node)
+{
+    EXPECT(p_node->i_children == 2);
+    return 0;
+}
+
 int main(void)
 {
     test_init();
@@ -119,6 +141,9 @@ int main(void)
     if(!ret)
         ret = runtest("b4s0", vlc, "shout-b4s", B4S_URL,
                       b4splaylist0, sizeof(b4splaylist0) - 1, check_b4s0);
+    if(!ret)
+        ret = runtest("xspf0", vlc, "xspf-open", XSPF_URL,
+                      xspfplaylist0, sizeof(xspfplaylist0) - 1, check_xspf0);
 
     libvlc_release(vlc);
     return ret;
