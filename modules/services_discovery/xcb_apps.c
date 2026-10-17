@@ -33,6 +33,7 @@ typedef xcb_atom_t Atom;
 #include <vlc_dialog.h>
 #include <vlc_charset.h>
 #include <vlc_plugin.h>
+#include <vlc_configuration.h>
 #ifdef HAVE_SEARCH_H
 # include <search.h>
 #endif
@@ -78,11 +79,20 @@ static void UpdateApps (services_discovery_t *);
 static void DelApp (void *);
 static void AddDesktop(services_discovery_t *);
 
+/* The x11-display option is declared by the xcb_window plugin, which is not
+ * built along with this one (it needs RandR): look it up only if it exists. */
+static char *GetDisplay (vlc_object_t *obj)
+{
+    if (config_FindConfig ("x11-display") == NULL)
+        return NULL;
+    return var_InheritString (obj, "x11-display");
+}
+
 static int vlc_sd_probe_Open (vlc_object_t *obj)
 {
     vlc_probe_t *probe = (vlc_probe_t *)obj;
 
-    char *display = var_InheritString (obj, "x11-display");
+    char *display = GetDisplay (obj);
     xcb_connection_t *conn = xcb_connect (display, NULL);
     free (display);
     if (xcb_connection_has_error (conn))
@@ -106,7 +116,7 @@ static int Open (vlc_object_t *obj)
     sd->description = _("Screen capture");
 
     /* Connect to X server */
-    char *display = var_InheritString (obj, "x11-display");
+    char *display = GetDisplay (obj);
     int snum;
     xcb_connection_t *conn = xcb_connect (display, &snum);
     free (display);
