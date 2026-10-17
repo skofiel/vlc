@@ -377,6 +377,10 @@ CompositorX11RenderWindow::CompositorX11RenderWindow(qt_intf_t* p_intf, xcb_conn
 
 CompositorX11RenderWindow::~CompositorX11RenderWindow()
 {
+    // ~QWindow() hides the window, and must not call the handler of the
+    // visibility, that uses this derived window
+    disconnect(this, &QWindow::visibilityChanged, this, nullptr);
+
     stopRendering();
 }
 
