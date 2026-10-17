@@ -38,6 +38,18 @@ T.Popup {
 
     height: VLCStyle.dp(320, VLCStyle.scale)
 
+    // Functions
+
+    // opens the menu on a tab of the first page: 0 playback, 1 video, 2 audio,
+    // 3 subtitles
+    function openTab(index) {
+        stackView.pop(null, T.StackView.Immediate)
+        const page = stackView.get(0)
+        if (page)
+            page.currentIndex = index
+        open()
+    }
+
     // Events
 
     // NOTE: Give the menu a keyboard focus even when it was opened with the mouse, otherwise

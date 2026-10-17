@@ -18,76 +18,15 @@
 
 import QtQuick
 
-
-import VLC.Widgets as Widgets
 import VLC.Style
-import VLC.Player
 import VLC.Util
 
-Widgets.IconToolButton {
-    id: root
-
-    // Proprerties
-
-    readonly property var _parentItem: {
-        if ((typeof rootPlayer !== 'undefined') && (rootPlayer !== null))
-            return rootPlayer
-        else
-            return g_mainDisplay
-    }
-
-    // Signals
-
-    signal requestLockUnlockAutoHide(bool lock)
-    signal menuOpened(var menu)
-
-    // Settings
+TracksMenuButton {
+    tab: 2
 
     text: VLCIcons.audiosub
-
-    enabled: menuLoader.status === Loader.Ready
 
     description: qsTr("Languages and tracks")
 
     AccessibleCompat.id: "langButton"
-
-    // Events
-
-    onClicked: menuLoader.item.open()
-
-    // Children
-
-    Loader {
-        id: menuLoader
-
-        sourceComponent: TracksMenu {
-            id: menu
-
-            parent: root._parentItem
-
-            x: 0
-            y: (parent.positionSliderY - height)
-            z: 1
-
-            focus: true
-
-            colorContext.palette: root.colorContext.palette
-
-            onOpened: {
-                root.requestLockUnlockAutoHide(true)
-                root.menuOpened(menu)
-            }
-
-            onClosed: {
-                root.requestLockUnlockAutoHide(false)
-                root.forceActiveFocus()
-                root.menuOpened(null)
-            }
-        }
-    }
-
-    function forceUnlock() {
-        if((menuLoader)&&(menuLoader.item))
-            menuLoader.item.close()
-    }
 }
