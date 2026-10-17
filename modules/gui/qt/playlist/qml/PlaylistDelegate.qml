@@ -31,7 +31,10 @@ import VLC.Util
 T.Control {
     id: delegate
 
+    Accessible.role: Accessible.ListItem
     Accessible.name: title
+    Accessible.selected: delegate.selected
+    Accessible.onPressAction: MainPlaylistController.goTo(delegate.mappedIndex(), true)
 
     // Properties
 

@@ -28,6 +28,11 @@ import VLC.Util
 T.Control {
     id: delegate
 
+    Accessible.role: Accessible.Row
+    Accessible.name: rowModel?.title ?? rowModel?.name ?? ""
+    Accessible.selected: delegate.selected
+    Accessible.onPressAction: delegate.itemDoubleClicked(delegate.index, delegate.rowModel)
+
     // Properties
     required property int index
     required property var rowModel
