@@ -41,6 +41,7 @@ public:
         Minimize,
         MaximizeRestore,
         Close,
+        Fullscreen,
         SystemMenu,
 
         TypeCount
@@ -109,6 +110,7 @@ public:
 private slots:
     void minimizeButtonClicked();
     void maximizeRestoreButtonClicked();
+    void fullscreenButtonClicked();
     void closeButtonClicked();
 
 private:

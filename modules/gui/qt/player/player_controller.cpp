@@ -33,6 +33,7 @@
 #include <vlc_cxx_helpers.hpp>
 #include <vlc_vout.h>
 #include <vlc_preparser.h>
+#include <vlc_media_library.h>
 
 #include <QFile>
 #include <QDir>
@@ -981,12 +982,29 @@ static void on_player_corks_changed(vlc_player_t *, unsigned, void *data)
     msg_Dbg( that->p_intf, "on_player_corks_changed");
 }
 
-static void on_player_playback_restore_queried(vlc_player_t *, void *data)
+static void on_player_playback_restore_queried(vlc_player_t *player, void *data)
 {
     PlayerControllerPrivate* that = static_cast<PlayerControllerPrivate*>(data);
     msg_Dbg( that->p_intf, "on_playback_restore_queried");
-    that->callAsync([that](){
+
+    // the position is the progress saved by the media library
+    vlc_tick_t restoreTime = VLC_TICK_INVALID;
+    vlc_medialibrary_t* ml = vlc_ml_instance_get(that->p_intf);
+    input_item_t* item = vlc_player_GetCurrentMedia(player);
+    if (ml && item && item->psz_uri)
+    {
+        vlc_ml_media_t* media = vlc_ml_get_media_by_mrl(ml, item->psz_uri);
+        if (media)
+        {
+            if (media->f_progress > 0 && media->i_duration > 0)
+                restoreTime = VLC_TICK_FROM_MS(media->f_progress * media->i_duration);
+            vlc_ml_release(media);
+        }
+    }
+
+    that->callAsync([that, restoreTime](){
         that->m_canRestorePlayback = true;
+        that->m_restoreTime = VLCDuration(restoreTime);
         emit that->q_func()->playbackRestoreQueried();
     });
 }
@@ -2241,6 +2259,43 @@ int PlayerController::AddAssociatedMedia(es_format_category_e cat, const QString
     }
 
 
+QString PlayerController::getVideoTransform() const
+{
+    Q_D(const PlayerController);
+    return d->m_videoTransform;
+}
+
+void PlayerController::setVideoTransform( const QString& transform )
+{
+    Q_D(PlayerController);
+    if (d->m_videoTransform == transform)
+        return;
+
+    d->m_videoTransform = transform;
+
+    // as the extended video settings, apply the filter on the fly
+    for (const SharedVOutThread& vout : getVouts())
+    {
+        char* chain = var_GetString( vout.get(), "video-filter" );
+        QStringList filters = qfu( chain ? chain : "" ).split( ':', Qt::SkipEmptyParts );
+        free( chain );
+
+        filters.removeAll( QStringLiteral("transform") );
+        // remove the filter first, so that it is created again with the new type
+        var_SetString( vout.get(), "video-filter", qtu( filters.join( ':' ) ) );
+
+        if (!transform.isEmpty())
+        {
+            var_Create( vout.get(), "transform-type", VLC_VAR_STRING );
+            var_SetString( vout.get(), "transform-type", qtu( transform ) );
+            filters << QStringLiteral("transform");
+            var_SetString( vout.get(), "video-filter", qtu( filters.join( ':' ) ) );
+        }
+    }
+
+    emit videoTransformChanged();
+}
+
 QABSTRACTLIST_GETTER( TrackListModel, getVideoTracks, m_videoTracks)
 QABSTRACTLIST_GETTER( TrackListModel, getAudioTracks, m_audioTracks)
 QABSTRACTLIST_GETTER( TrackListModel, getSubtitleTracks, m_subtitleTracks)
@@ -2284,6 +2339,7 @@ PRIMITIVETYPE_GETTER(bool, isRewindable, m_capabilities & VLC_PLAYER_CAP_REWIND)
 PRIMITIVETYPE_GETTER(bool, isPausable, m_capabilities & VLC_PLAYER_CAP_PAUSE)
 PRIMITIVETYPE_GETTER(bool, isRateChangable, m_capabilities & VLC_PLAYER_CAP_CHANGE_RATE)
 PRIMITIVETYPE_GETTER(bool, canRestorePlayback, m_canRestorePlayback);
+PRIMITIVETYPE_GETTER(VLCDuration, restoreTime, m_restoreTime);
 PRIMITIVETYPE_GETTER(float, getSubtitleFPS, m_subtitleFPS)
 PRIMITIVETYPE_GETTER(bool, hasVideoOutput, m_hasVideo)
 PRIMITIVETYPE_GETTER(float, getBuffering, m_buffering)

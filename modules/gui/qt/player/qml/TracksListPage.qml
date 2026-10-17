@@ -190,14 +190,7 @@ ColumnLayout {
             }
         }
 
-        TrackColumn {
-            title: qsTr("Video Tracks")
-            tracksModel: Player.videoTracks
-            menuIcon: VLCIcons.add
-            menuText: qsTr("Add")
-            onMenuAction: (menuPos) => {
-                DialogsProvider.loadVideoFile()
-            }
+        VideoSettings {
         }
 
         TrackColumn {
@@ -215,6 +208,7 @@ ColumnLayout {
             tracksModel: Player.subtitleTracks
             menuIcon: VLCIcons.expand
             menuText: qsTr("Menu")
+            showPreferences: true
             onMenuAction: (menuPos)  => {
                 menuSubtitle.popup(menuPos)
             }
@@ -236,6 +230,9 @@ ColumnLayout {
         required property var tracksModel
         required property string menuIcon
         required property string menuText
+
+        // shows a "Show Preferences" button under the list
+        property bool showPreferences: false
 
         signal menuAction(point position)
 
@@ -308,6 +305,7 @@ ColumnLayout {
                 model: tracksListContainer.tracksModel
                 width: tracksListContainer.width
                 height: tracksListContainer.height - titleHeader.height
+                        - (preferencesButton.visible ? preferencesButton.height + 2 * VLCStyle.margin_small : 0)
                 focus: true
                 clip: !fadingEdge.implicitClipping && (height < contentHeight)
 
@@ -351,6 +349,200 @@ ColumnLayout {
                     Navigation.parentItem: tracksList
                 }
             }
+
+            Widgets.ButtonExt {
+                id: preferencesButton
+
+                x: VLCStyle.margin_large
+                width: tracksListContainer.width - 2 * VLCStyle.margin_large
+
+                visible: tracksListContainer.showPreferences
+
+                text: qsTr("Show Preferences")
+
+                Navigation.parentItem: tracksListContainer
+                Navigation.upItem: tracksList
+
+                onClicked: {
+                    trackMenuController.requestClose()
+                    DialogsProvider.prefsDialog()
+                }
+            }
+        }
+    }
+
+    // flip, rotation, zoom, aspect ratio, crop... and the video tracks
+    component VideoSettings: Flickable {
+        id: videoSettings
+
+        contentHeight: videoColumn.implicitHeight + 2 * VLCStyle.margin_large
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
+
+        focus: true
+
+        Navigation.parentItem: pages
+
+        function setCurrentItemFocus(reason) {
+            Helpers.enforceFocus(flipChoice, reason)
+        }
+
+        ColumnLayout {
+            id: videoColumn
+
+            x: VLCStyle.margin_large
+            y: VLCStyle.margin_large
+            width: videoSettings.width - 2 * VLCStyle.margin_large
+
+            spacing: VLCStyle.margin_small
+
+            Widgets.ListLabel {
+                text: qsTr("Flip")
+                color: theme.fg.secondary
+            }
+
+            Widgets.SegmentedChoice {
+                id: flipChoice
+
+                Layout.fillWidth: true
+
+                choices: [
+                    { text: qsTr("None"), value: "" },
+                    { text: qsTr("Horizontal"), value: "hflip" },
+                    { text: qsTr("Vertical"), value: "vflip" }
+                ]
+                value: (Player.videoTransform === "hflip" || Player.videoTransform === "vflip")
+                       ? Player.videoTransform : ""
+
+                onSelected: (value) => Player.videoTransform = value
+            }
+
+            Widgets.ListLabel {
+                text: qsTr("Rotate")
+                color: theme.fg.secondary
+            }
+
+            Widgets.SegmentedChoice {
+                Layout.fillWidth: true
+
+                choices: [
+                    { text: qsTr("%1 deg").arg(0), value: "" },
+                    { text: qsTr("%1 deg").arg(90), value: "90" },
+                    { text: qsTr("%1 deg").arg(180), value: "180" },
+                    { text: qsTr("%1 deg").arg(270), value: "270" }
+                ]
+                // no rotation is selected while the video is flipped
+                value: (Player.videoTransform === "hflip" || Player.videoTransform === "vflip")
+                       ? null : Player.videoTransform
+
+                onSelected: (value) => Player.videoTransform = value
+            }
+
+            ChoiceRow {
+                text: qsTr("Zoom")
+                choiceModel: Player.zoom
+            }
+
+            ChoiceRow {
+                text: qsTr("Aspect Ratio")
+                choiceModel: Player.aspectRatio
+            }
+
+            ChoiceRow {
+                text: qsTr("Crop")
+                choiceModel: Player.crop
+            }
+
+            ChoiceRow {
+                text: qsTr("Fit")
+                choiceModel: Player.fit
+            }
+
+            ChoiceRow {
+                text: qsTr("Deinterlace")
+                choiceModel: Player.deinterlaceMode
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.topMargin: VLCStyle.margin_small
+                Layout.bottomMargin: VLCStyle.margin_small
+
+                implicitHeight: VLCStyle.border
+                color: theme.separator
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Widgets.SubtitleLabel {
+                    Layout.fillWidth: true
+
+                    text: qsTr("Video Tracks")
+                    color: theme.fg.secondary
+                }
+
+                Widgets.IconTrackButton {
+                    font.pixelSize: VLCStyle.icon_track
+
+                    description: qsTr("Add")
+                    text: VLCIcons.add
+
+                    onClicked: DialogsProvider.loadVideoFile()
+                }
+            }
+
+            Repeater {
+                model: Player.videoTracks
+
+                delegate: Widgets.CheckedDelegate {
+                    required property var model
+
+                    Layout.fillWidth: true
+                    implicitHeight: VLCStyle.dp(36, VLCStyle.scale)
+
+                    text: model.display
+                    checked: model.checked
+                    opacity: hovered || activeFocus || checked ? 1 : .6
+
+                    onClicked: model.checked = !model.checked
+                }
+            }
+        }
+    }
+
+    // label and a combo box of the choices of a player variable
+    component ChoiceRow: RowLayout {
+        id: choiceRow
+
+        property alias text: choiceLabel.text
+        property VLCVarChoiceModel choiceModel
+
+        Layout.fillWidth: true
+
+        visible: (choiceModel?.count ?? choiceCombo.count) > 0
+
+        Widgets.ListLabel {
+            id: choiceLabel
+
+            Layout.fillWidth: true
+
+            color: theme.fg.secondary
+        }
+
+        Widgets.ComboBoxExt {
+            id: choiceCombo
+
+            Layout.preferredWidth: VLCStyle.dp(200, VLCStyle.scale)
+            Layout.preferredHeight: VLCStyle.combobox_height_normal
+
+            model: choiceRow.choiceModel
+            textRole: "display"
+            currentIndex: choiceRow.choiceModel?.currentRow ?? -1
+
+            Accessible.name: choiceRow.text
+
+            onActivated: (index) => choiceRow.choiceModel.toggleIndex(index)
         }
     }
 

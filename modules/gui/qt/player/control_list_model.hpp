@@ -82,9 +82,10 @@ public:
         NAVIGATION_BUTTONS,
         PROGRAM_BUTTON,
         NAVIGATION_BOX,
-        RESERVED_0X2B,
-        RESERVED_0X2C,
-        RESERVED_0X2D,
+        // open the tracks menu on the audio, subtitles or playback tab
+        AUDIO_TRACKS_BUTTON,
+        SUBTITLE_TRACKS_BUTTON,
+        PLAYER_SETTINGS_BUTTON,
         RESERVED_0X2E,
         RESERVED_0X2F,
         RESERVED_0X30,
@@ -111,7 +112,7 @@ public:
     Q_ENUM(ControlType)
 
     static_assert(RESERVED_0X1F == 0x1F, "missaligned");
-    static_assert(RESERVED_0X2B == 0x2B, "missaligned");
+    static_assert(AUDIO_TRACKS_BUTTON == 0x2B, "missaligned");
     static_assert(RESERVED_0X3F == 0x3F, "missaligned");
 
     // Basic functionality:

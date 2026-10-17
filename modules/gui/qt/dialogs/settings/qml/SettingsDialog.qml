@@ -438,7 +438,7 @@ ModalDialog {
         Component {
             id: schemeComponent
 
-            SegmentedChoice {
+            Widgets.SegmentedChoice {
                 choices: row.choices
                 value: row.value
                 onSelected: (value) => row.setValue(value)
@@ -500,54 +500,6 @@ ModalDialog {
     }
 
     // one button per choice, the selected one in the accent color
-    component SegmentedChoice: Row {
-        id: segmented
-
-        property var choices: []
-        property var value
-
-        signal selected(var value)
-
-        spacing: VLCStyle.margin_xxxsmall
-
-        Repeater {
-            model: segmented.choices
-
-            T.Button {
-                id: segment
-
-                required property var modelData
-
-                readonly property bool current: modelData.value == segmented.value
-
-                width: (segmented.width - segmented.spacing * (segmented.choices.length - 1)) / segmented.choices.length
-                height: VLCStyle.dp(32, VLCStyle.scale)
-
-                text: modelData.text
-
-                Accessible.checkable: true
-                Accessible.checked: current
-
-                onClicked: segmented.selected(modelData.value)
-
-                background: Rectangle {
-                    radius: VLCStyle.radius_small
-                    color: segment.current ? Qt.alpha(theme.accent, 0.2) : Qt.alpha(theme.fg.primary, 0.06)
-                    border.color: segment.visualFocus ? theme.visualFocus : "transparent"
-                }
-
-                contentItem: T.Label {
-                    text: segment.text
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    elide: Text.ElideRight
-                    font.pixelSize: VLCStyle.fontSize_normal
-                    color: segment.current ? theme.accent : theme.fg.secondary
-                }
-            }
-        }
-    }
-
     // swatches of the accent colors ("default" is the first one)
     component AccentColorChoice: Row {
         id: accent

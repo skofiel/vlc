@@ -64,6 +64,9 @@ Rectangle {
 
                 anchors.verticalCenter: parent.verticalCenter
 
+                // the themes have no image for the fullscreen button
+                visible: modelData.type !== CSDButton.Fullscreen
+
                 bannerHeight: root.height
 
                 buttonType: {
@@ -78,6 +81,9 @@ Rectangle {
 
                     case CSDButton.Close:
                         return CSDThemeImage.CLOSE
+
+                    case CSDButton.Fullscreen:
+                        return CSDThemeImage.MAXIMIZE
                     }
 
                     console.assert(false, "unreachable")

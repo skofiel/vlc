@@ -938,6 +938,7 @@ modules/gui/qt/player/qml/TracksListPage.qml
 modules/gui/qt/player/qml/controlbarcontrols/ArtworkInfoWidget.qml
 modules/gui/qt/player/qml/controlbarcontrols/AspectRatioWidget.qml
 modules/gui/qt/player/qml/controlbarcontrols/AtoBButton.qml
+modules/gui/qt/player/qml/controlbarcontrols/AudioTracksButton.qml
 modules/gui/qt/player/qml/controlbarcontrols/BackButton.qml
 modules/gui/qt/player/qml/controlbarcontrols/BookmarkButton.qml
 modules/gui/qt/player/qml/controlbarcontrols/ChapterNextButton.qml
@@ -959,6 +960,7 @@ modules/gui/qt/player/qml/controlbarcontrols/NextButton.qml
 modules/gui/qt/player/qml/controlbarcontrols/OpenButton.qml
 modules/gui/qt/player/qml/controlbarcontrols/PlayButton.qml
 modules/gui/qt/player/qml/controlbarcontrols/PlaybackSpeedButton.qml
+modules/gui/qt/player/qml/controlbarcontrols/PlayerSettingsButton.qml
 modules/gui/qt/player/qml/controlbarcontrols/PlayerSwitchButton.qml
 modules/gui/qt/player/qml/controlbarcontrols/PlaylistButton.qml
 modules/gui/qt/player/qml/controlbarcontrols/PreviousButton.qml
@@ -974,6 +976,7 @@ modules/gui/qt/player/qml/controlbarcontrols/SlowerButton.qml
 modules/gui/qt/player/qml/controlbarcontrols/SnapshotButton.qml
 modules/gui/qt/player/qml/controlbarcontrols/SpacerWidget.qml
 modules/gui/qt/player/qml/controlbarcontrols/StopButton.qml
+modules/gui/qt/player/qml/controlbarcontrols/SubtitleTracksButton.qml
 modules/gui/qt/player/qml/controlbarcontrols/TeletextButton.qml
 modules/gui/qt/player/qml/controlbarcontrols/TeletextWidget.qml
 modules/gui/qt/player/qml/controlbarcontrols/VolumeWidget.qml
@@ -997,6 +1000,7 @@ modules/gui/qt/util/ui_notifier.cpp
 modules/gui/qt/util/validators.cpp
 modules/gui/qt/util/validators.hpp
 modules/gui/qt/util/vlctick.cpp
+modules/gui/qt/util/qml/Helpers.qml
 modules/gui/qt/util/model_recovery_agent.hpp
 modules/gui/qt/widgets/native/animators.cpp
 modules/gui/qt/widgets/native/animators.hpp

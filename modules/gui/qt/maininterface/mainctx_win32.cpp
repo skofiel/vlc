@@ -340,6 +340,10 @@ public:
             case CSDButton::MaximizeRestore:
                 *result = HTMAXBUTTON;
                 return true;
+            case CSDButton::Fullscreen:
+                // no system button: the interface handles it
+                *result = HTCLIENT;
+                return true;
             default:
                 vlc_assert_unreachable();
                 return false;

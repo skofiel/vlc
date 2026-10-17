@@ -121,6 +121,7 @@ public:
 
     SharedInputItem    m_currentItem;
     bool            m_canRestorePlayback = false;
+    VLCDuration     m_restoreTime;
 
     int             m_capabilities = 0;
 
@@ -170,6 +171,7 @@ public:
     VLCVarChoiceModel m_aspectRatio;
     VLCVarChoiceModel m_crop;
     VLCVarChoiceModel m_fit;
+    QString m_videoTransform;
     VLCVarChoiceModel m_deinterlace;
     VLCVarChoiceModel m_deinterlaceMode;
     QVLCBool m_autoscale;
