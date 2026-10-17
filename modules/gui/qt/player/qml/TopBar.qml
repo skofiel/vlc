@@ -231,8 +231,8 @@ FocusScope{
         visible: root.showToolbar
         enabled: root.showToolbar
 
-        onHoveredChanged: menu => root.requestLockUnlockAutoHide(hovered)
-        onMenuOpenedChanged: menu => root.requestLockUnlockAutoHide(menuOpened)
+        onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
+        onMenuOpenedChanged: root.requestLockUnlockAutoHide(menuOpened)
         onImplicitHeightChanged: root._layout()
     }
 
