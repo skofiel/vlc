@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 import QtQuick
-import QtQuick.Layouts
 import QtQuick.Templates as T
 
 import VLC.MainInterface
@@ -91,10 +90,9 @@ Item {
         return crumbs
     }
 
-    RowLayout {
+    Row {
         id: row
 
-        width: Math.min(implicitWidth, root.width)
         height: root.height
 
         spacing: VLCStyle.margin_xxsmall
@@ -102,7 +100,7 @@ Item {
         Repeater {
             model: root.crumbs
 
-            delegate: RowLayout {
+            delegate: Row {
                 id: crumb
 
                 required property var modelData
@@ -110,13 +108,14 @@ Item {
 
                 readonly property bool isLast: index === root.crumbs.length - 1
 
-                Layout.fillWidth: isLast
-                Layout.minimumWidth: separator.implicitWidth
+                height: row.height
 
                 spacing: VLCStyle.margin_xxsmall
 
                 IconLabel {
                     id: separator
+
+                    anchors.verticalCenter: parent.verticalCenter
 
                     visible: crumb.index > 0
 
@@ -130,9 +129,12 @@ Item {
                 T.AbstractButton {
                     id: button
 
-                    // only the last item is elided
-                    Layout.fillWidth: crumb.isLast
-                    Layout.maximumWidth: implicitWidth
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    // only the last item is elided, when the path is too long
+                    width: crumb.isLast ? Math.max(0, Math.min(implicitWidth,
+                                                               root.width - crumb.x - (separator.visible ? separator.width + crumb.spacing : 0)))
+                                        : implicitWidth
 
                     implicitWidth: label.implicitWidth
                     implicitHeight: label.implicitHeight
