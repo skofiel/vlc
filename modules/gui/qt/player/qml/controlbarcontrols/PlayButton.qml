@@ -260,9 +260,10 @@ T.Control {
 
             radius: width / 2
 
+            // follows the accent color (the default one gives #e25b01 -> #f89a06)
             gradient: Gradient {
-                GradientStop { position: 0.0; color: "#e25b01" }
-                GradientStop { position: 1.0; color: "#f89a06" }
+                GradientStop { position: 0.0; color: Qt.darker(theme.accent, 1.13) }
+                GradientStop { position: 1.0; color: Qt.lighter(theme.accent, 1.1) }
             }
 
             Widgets.RoundedRectangleShadow {
