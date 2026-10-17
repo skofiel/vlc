@@ -170,6 +170,17 @@ QtObject {
     readonly property int combobox_height_normal: MainCtx.dp(24, scale)
     readonly property int combobox_height_large: MainCtx.dp(30, scale)
 
+    // application font family (Inter, unless qt-bundled-font is disabled)
+    readonly property string fontFamily: Qt.application.font.family
+
+    // radius tokens (use radius_pill(height) for pill shapes)
+    readonly property int radius_small: MainCtx.dp(4, scale)
+    readonly property int radius_medium: MainCtx.dp(8, scale)
+
+    function radius_pill(height) {
+        return height / 2
+    }
+
     //button
     readonly property int button_width_small: MainCtx.dp(64, scale)
     readonly property int button_width_normal: MainCtx.dp(96, scale)

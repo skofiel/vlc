@@ -33,7 +33,7 @@ include ../../modulelist.mk
 
 SUFFIXES += .ui .h .hpp .moc.cpp .qml .js .mjs .moc
 TEST_EXTENSIONS = .qml
-EXTRA_DIST = qt6.pro qtest.pro quicktest.pro scripts
+EXTRA_DIST = qt6.pro qtest.pro quicktest.pro scripts pixmaps/fonts/OFL.txt
 vlc_qt_libs = $(QT_LIBS)
 RCC_EXTRA_PARAMS =
 
@@ -281,6 +281,7 @@ libqt_plugin_la_SOURCES = \
 	style/qtthemeprovider.hpp \
 	style/colorcontext.cpp \
 	style/colorcontext.hpp \
+	style/contrast.hpp \
 	style/systempalette.cpp \
 	style/systempalette.hpp \
 	style/vlcicons.cpp 	style/vlcicons.hpp \
@@ -791,6 +792,10 @@ ui_%.h: %.ui
 
 libqt_plugin_la_RES = \
 	pixmaps/VLCIcons.ttf \
+	pixmaps/fonts/Inter-Regular.ttf \
+	pixmaps/fonts/Inter-Medium.ttf \
+	pixmaps/fonts/Inter-SemiBold.ttf \
+	pixmaps/fonts/Inter-Bold.ttf \
 	pixmaps/addons/addon_default.svg \
 	pixmaps/addons/addon_broken.svg \
 	pixmaps/addons/addon_blue.svg \

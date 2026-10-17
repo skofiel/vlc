@@ -577,7 +577,15 @@ static void ParseUSFHeaderTags( decoder_t *p_dec, xml_reader_t *p_xml_reader )
                     case 2:
                         if( !strcasecmp( "style", node ) )
                         {
-                            TAB_APPEND( p_sys->i_ssa_styles, p_sys->pp_ssa_styles, p_ssa_style );
+                            /* Styles are looked up by name: ignore the
+                             * unnamed ones */
+                            if( p_ssa_style && p_ssa_style->psz_stylename )
+                                TAB_APPEND( p_sys->i_ssa_styles, p_sys->pp_ssa_styles, p_ssa_style );
+                            else if( p_ssa_style )
+                            {
+                                text_style_Delete( p_ssa_style->p_style );
+                                free( p_ssa_style );
+                            }
 
                             p_ssa_style = NULL;
                             i_style_level--;
@@ -807,7 +815,13 @@ static void ParseUSFHeaderTags( decoder_t *p_dec, xml_reader_t *p_xml_reader )
                 break;
         }
     }
-    free( p_ssa_style );
+    if( p_ssa_style )
+    {
+        /* unterminated style */
+        free( p_ssa_style->psz_stylename );
+        text_style_Delete( p_ssa_style->p_style );
+        free( p_ssa_style );
+    }
 }
 
 

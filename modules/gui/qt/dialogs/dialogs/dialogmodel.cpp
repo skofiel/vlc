@@ -255,8 +255,12 @@ VLCDialogModel::VLCDialogModel(qt_intf_t* intf, QObject* parent)
 
 VLCDialogModel::~VLCDialogModel()
 {
-    m_shuttingDown = true;
-    m_providerWait.wakeAll();
+    {
+        // dialogCallback() checks the condition with m_lock held
+        QMutexLocker lock(&m_lock);
+        m_shuttingDown = true;
+        m_providerWait.wakeAll();
+    }
     vlc_dialog_provider_set_callbacks(m_intf, nullptr, nullptr);
 
     //ensure that we are not destroying ourselve before
@@ -280,29 +284,34 @@ void VLCDialogModel::setProvider(VLCDialog* provider)
     {
         disconnect(m_provider, nullptr, this, nullptr);
     }
-    m_provider = provider;
-    if (m_provider)
+    if (provider)
     {
-        connect(m_provider, &VLCDialog::post_login,
+        connect(provider, &VLCDialog::post_login,
                 this, [](DialogId dialogId, const QString & username,
                         const QString & password, bool store){
                     vlc_dialog_id_post_login(dialogId.m_id, qtu(username), qtu(password), store);
                 });
-        connect(m_provider, &VLCDialog::post_action1,
+        connect(provider, &VLCDialog::post_action1,
                 this, [](DialogId dialogId){
                     vlc_dialog_id_post_action(dialogId.m_id, 1);
                 });
-        connect(m_provider, &VLCDialog::post_action2,
+        connect(provider, &VLCDialog::post_action2,
                 this, [](DialogId dialogId){
                     vlc_dialog_id_post_action(dialogId.m_id, 2);
                 });
-        connect(m_provider, &VLCDialog::dismiss,
+        connect(provider, &VLCDialog::dismiss,
                 this, [](DialogId dialogId){
                     vlc_dialog_id_dismiss(dialogId.m_id);
                 });
 
     }
-    m_providerWait.wakeAll();
+    {
+        // m_provider is read by dialogCallback() from other threads, with
+        // m_lock held
+        QMutexLocker lock(&m_lock);
+        m_provider = provider;
+        m_providerWait.wakeAll();
+    }
     emit providerChanged();
 }
 

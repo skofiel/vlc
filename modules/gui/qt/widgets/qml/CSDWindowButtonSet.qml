@@ -72,6 +72,21 @@ Row {
 
             isThemeDark: theme.palette.isDark
 
+            // the button only shows an icon glyph
+            Accessible.name: {
+                switch (modelData.type) {
+                case CSDButton.Minimize:
+                    return qsTr("Minimize")
+                case CSDButton.MaximizeRestore:
+                    return (MainCtx.intfMainWindow.visibility === Window.Maximized)
+                            ? qsTr("Restore")
+                            : qsTr("Maximize")
+                case CSDButton.Close:
+                    return qsTr("Close")
+                }
+                return ""
+            }
+
             iconTxt:{
                 switch (modelData.type) {
                 case CSDButton.Minimize:

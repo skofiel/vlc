@@ -92,11 +92,14 @@ AboutDialog::AboutDialog( qt_intf_t *_p_intf)
     setWindowModality( Qt::WindowModal );
 
     ui.version->setText(qfu( " " VERSION_MESSAGE ) );
-    ui.title->setText("<html><head/><body><p><span style=\" font-size:26pt; color:#353535;\"> " + qtr( "VLC media player" ) + " </span></p></body></html>");
+    /* use the palette colors (the hardcoded ones were unreadable with a dark
+     * theme), the link color is part of the translated strings */
+    const QString linkColor = palette().color( QPalette::Link ).name();
+    ui.title->setText("<html><head/><body><p><span style=\" font-size:26pt;\"> " + qtr( "VLC media player" ) + " </span></p></body></html>");
 
-    ui.MainBlabla->setText("<html><head/><body>" +
+    ui.MainBlabla->setText(QString("<html><head/><body>" +
     qtr( "<p>VLC media player is a free and open source media player, encoder, and streamer made by the volunteers of the <a href=\"https://www.videolan.org/\"><span style=\" text-decoration: underline; color:#0057ae;\">VideoLAN</span></a> community.</p><p>VLC uses its internal codecs, works on essentially every popular platform, and can read almost all files, CDs, DVDs, network streams, capture cards and other media formats!</p><p><a href=\"https://www.videolan.org/contribute/\"><span style=\" text-decoration: underline; color:#0057ae;\">Help and join us!</span></a>" ) +
-    "</p></body> </html>");
+    "</p></body> </html>").replace( "#0057ae", linkColor, Qt::CaseInsensitive ));
 
     const QDate today = QDate::currentDate();
     if( today.month() == 4 && today.day() == 1
@@ -114,13 +117,13 @@ AboutDialog::AboutDialog( qt_intf_t *_p_intf)
     /* People who wrote the software */
     ui.authorsPage->setText( qfu( psz_authors ) );
 
-    ui.licenseButton->setText( "<html><head/><body><p><span style=\" text-decoration: underline; color:#0057ae;\">"+qtr( "License" )+"</span></p></body></html>");
+    ui.licenseButton->setText( "<html><head/><body><p><span style=\" text-decoration: underline; color:" + linkColor + ";\">"+qtr( "License" )+"</span></p></body></html>");
     ui.licenseButton->installEventFilter( this );
 
-    ui.authorsButton->setText( "<html><head/><body><p><span style=\" text-decoration: underline; color:#0057ae;\">"+qtr( "Authors" )+"</span></p></body></html>");
+    ui.authorsButton->setText( "<html><head/><body><p><span style=\" text-decoration: underline; color:" + linkColor + ";\">"+qtr( "Authors" )+"</span></p></body></html>");
     ui.authorsButton->installEventFilter( this );
 
-    ui.creditsButton->setText( "<html><head/><body><p><span style=\" text-decoration: underline; color:#0057ae;\">"+qtr( "Credits" )+"</span></p></body></html>");
+    ui.creditsButton->setText( "<html><head/><body><p><span style=\" text-decoration: underline; color:" + linkColor + ";\">"+qtr( "Credits" )+"</span></p></body></html>");
     ui.creditsButton->installEventFilter( this );
 
     ui.version->installEventFilter( this );

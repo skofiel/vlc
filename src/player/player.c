@@ -2099,6 +2099,7 @@ vlc_player_t *
 vlc_player_New(vlc_object_t *parent, enum vlc_player_lock_type lock_type)
 {
     audio_output_t *aout = NULL;
+    bool cork_callback = false;
     vlc_player_t *player = vlc_custom_create(parent, sizeof(*player), "player");
     if (!player)
         return NULL;
@@ -2163,12 +2164,15 @@ vlc_player_New(vlc_object_t *parent, enum vlc_player_lock_type lock_type)
     VAR_CREATE("start-paused", VLC_VAR_BOOL);
 
     /* Initialize the shared HTTP cookie jar */
-    vlc_value_t cookies;
-    cookies.p_address = vlc_http_cookies_new();
-    if (likely(cookies.p_address != NULL))
+    vlc_http_cookie_jar_t *cookies = vlc_http_cookies_new();
+    if (likely(cookies != NULL))
     {
-        VAR_CREATE("http-cookies", VLC_VAR_ADDRESS);
-        var_SetChecked(player, "http-cookies", VLC_VAR_ADDRESS, cookies);
+        if (var_Create(player, "http-cookies", VLC_VAR_ADDRESS) != VLC_SUCCESS)
+        {
+            vlc_http_cookies_destroy(cookies);
+            goto error;
+        }
+        var_SetAddress(player, "http-cookies", cookies);
     }
 #undef VAR_CREATE
 
@@ -2180,6 +2184,7 @@ vlc_player_New(vlc_object_t *parent, enum vlc_player_lock_type lock_type)
     /* Ensure the player has a valid aout */
     aout = vlc_player_aout_Init(player);
     var_AddCallback(player, "corks", vlc_player_CorkCallback, player);
+    cork_callback = true;
 
     player->deleting = false;
     vlc_player_InitLocks(player, lock_type);
@@ -2197,9 +2202,17 @@ vlc_player_New(vlc_object_t *parent, enum vlc_player_lock_type lock_type)
 error:
     if (aout)
         vlc_player_aout_Deinit(player);
-    var_DelCallback(player, "corks", vlc_player_CorkCallback, player);
+    if (cork_callback)
+        var_DelCallback(player, "corks", vlc_player_CorkCallback, player);
     if (player->resource)
         input_resource_Release(player->resource);
+
+    vlc_http_cookie_jar_t *jar = var_GetAddress(player, "http-cookies");
+    if (jar != NULL)
+    {
+        var_Destroy(player, "http-cookies");
+        vlc_http_cookies_destroy(jar);
+    }
 
     vlc_object_delete(player);
     return NULL;

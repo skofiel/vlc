@@ -100,6 +100,8 @@ Item {
             y: VLCStyle.dp(1, VLCStyle.scale)
             focusPolicy: Qt.NoFocus
 
+            Accessible.name: model.name
+
             onClicked: modelBookmark.select(modelBookmark.index(index, 0))
 
             onHoveredChanged: {

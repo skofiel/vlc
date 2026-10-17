@@ -48,3 +48,10 @@ MediaTreeListener::MediaTreeListener(MediaTreePtr tree, std::unique_ptr<MediaTre
         return;
     listener.reset( l );
 }
+
+MediaTreeListener::~MediaTreeListener()
+{
+    // remove the listener before destroying cb, which can be called by the
+    // media tree (from the services discovery threads) until then
+    listener.reset();
+}

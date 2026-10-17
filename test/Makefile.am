@@ -86,6 +86,7 @@ check_PROGRAMS = \
 	test_modules_codec_cea708 \
 	test_modules_codec_cea708_aspect_ratio \
 	test_modules_codec_cea708_integration \
+	test_modules_codec_subsusf \
 	test_modules_keystore \
 	test_modules_demux_json \
 	test_modules_demux_libmp4 \
@@ -93,7 +94,7 @@ check_PROGRAMS = \
 	test_modules_demux_timestamps_filter \
 	test_modules_demux_ts_pes \
 	test_modules_playlist_m3u \
-	test_modules_playlist_ram \
+	test_modules_playlist_parsers \
 	test_modules_stream_out_pcr_sync \
 	test_modules_stream_out_sdi \
 	test_modules_tls \
@@ -413,8 +414,8 @@ test_modules_demux_ts_pes_SOURCES = modules/demux/ts_pes.c \
 				../modules/demux/mpeg/ts_pes.h
 test_modules_playlist_m3u_SOURCES = modules/demux/playlist/m3u.c
 test_modules_playlist_m3u_LDADD = $(LIBVLCCORE) $(LIBVLC)
-test_modules_playlist_ram_SOURCES = modules/demux/playlist/ram.c
-test_modules_playlist_ram_LDADD = $(LIBVLCCORE) $(LIBVLC)
+test_modules_playlist_parsers_SOURCES = modules/demux/playlist/parsers.c
+test_modules_playlist_parsers_LDADD = $(LIBVLCCORE) $(LIBVLC)
 
 test_modules_codec_hxxx_helper_SOURCES = modules/codec/hxxx_helper.c \
                                       ../modules/codec/hxxx_helper.c \
@@ -433,6 +434,8 @@ test_modules_codec_cea708_aspect_ratio_LDADD = $(LIBVLCCORE) $(LIBVLC)
 
 test_modules_codec_cea708_integration_SOURCES = modules/codec/cea708_integration.c
 test_modules_codec_cea708_integration_LDADD = $(LIBVLCCORE) $(LIBVLC)
+test_modules_codec_subsusf_SOURCES = modules/codec/subsusf.c
+test_modules_codec_subsusf_LDADD = $(LIBVLCCORE) $(LIBVLC)
 test_modules_video_output_opengl_filters_SOURCES = \
 	modules/video_output/opengl/filters.c \
 	../modules/video_output/opengl/filters.c \

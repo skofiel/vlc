@@ -38,7 +38,8 @@
 #include <vlc_url.h>
 #include "playlist.h"
 
-#include <limits.h>
+/* Maximum value of a <vlc:id> (index in the track list array) */
+#define XSPF_MAX_TRACK_ID (1 << 20)
 
 #define SIMPLE_INTERFACE  (input_item_t    *p_input,\
                            const char      *psz_name,\
@@ -449,9 +450,10 @@ static bool parse_track_node COMPLEX_INTERFACE
         else
             free(psz_uri);
 
+        /* The track id is used as an index in an array: don't trust huge
+         * ids, the track is then added as if it had no id */
         if (p_sys->i_track_id < 0 ||
-            p_sys->i_track_id == INT_MAX ||
-            (size_t)p_sys->i_track_id >= (SIZE_MAX / sizeof(p_new_input)))
+            p_sys->i_track_id > XSPF_MAX_TRACK_ID)
         {
             input_item_node_AppendNode(p_input_node, p_new_node);
             p_new_node = NULL;

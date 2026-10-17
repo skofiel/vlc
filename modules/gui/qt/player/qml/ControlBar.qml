@@ -31,6 +31,11 @@ import VLC.Util
 T.Pane {
     id: root
 
+    // Media playback controls and progress are not mirrored in right-to-left
+    // layouts: the time always goes from left to right
+    LayoutMirroring.enabled: false
+    LayoutMirroring.childrenInherit: true
+
     enum TimeTextPosition {
         Hide,
         AboveSlider,

@@ -214,8 +214,9 @@ void VideoWindowHandler::setVideoFullScreen( bool fs )
     {
         WindowStateHolder::holdFullscreen(m_window,  WindowStateHolder::VIDEO, false);
 
-        if( m_lastWinScreen != NULL && !m_hasWayland )
+        if( m_lastWinScreen && !m_hasWayland )
             m_window->setScreen(m_lastWinScreen);
+        m_lastWinScreen = nullptr;
     }
 }
 

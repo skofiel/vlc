@@ -36,12 +36,16 @@ ButtonExt {
 
     signal menuIndicatorClicked()
 
-    rightPadding: leftPadding + implicitIndicatorWidth
+    // the indicator is on the right side (left side when mirrored)
+    leftPadding: padding + (mirrored ? implicitIndicatorWidth : 0)
+    rightPadding: padding + (mirrored ? 0 : implicitIndicatorWidth)
 
     spacing: VLCStyle.margin_xxsmall
 
     onKeyPressedFunc: function(event) {
-        if (KeyHelper.matchRight(event) && contentItem?.menuIndicatorButton) {
+        const towardIndicator = root.mirrored ? KeyHelper.matchLeft(event)
+                                              : KeyHelper.matchRight(event)
+        if (towardIndicator && contentItem?.menuIndicatorButton) {
             contentItem.menuIndicatorButton.forceActiveFocus(Qt.TabFocusReason)
             event.accepted = true
             return
@@ -145,7 +149,9 @@ ButtonExt {
 
             Keys.priority: Keys.AfterItem
             Keys.onPressed: (event) => {
-                if (KeyHelper.matchLeft(event)) {
+                const towardButton = root.mirrored ? KeyHelper.matchRight(event)
+                                                   : KeyHelper.matchLeft(event)
+                if (towardButton) {
                     root.forceActiveFocus(Qt.BacktabFocusReason)
                     event.accepted = true
                     return

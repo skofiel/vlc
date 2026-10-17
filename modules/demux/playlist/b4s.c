@@ -186,19 +186,25 @@ static int ReadDir( stream_t *p_demux, input_item_node_t *p_subitems )
                 // Read the element name
                 if( !strcmp( node, "entry" ) )
                 {
-                    vlc_xml_decode( psz_mrl );
-                    p_input = input_item_New( psz_mrl, psz_title );
-                    if( psz_now )
-                        input_item_SetNowPlaying( p_input, psz_now );
-                    if( psz_genre )
-                        input_item_SetGenre( p_input, psz_genre );
-                    if( psz_listeners )
-                        msg_Err( p_demux, "Unsupported meta listeners" );
-                    if( psz_bitrate )
-                        msg_Err( p_demux, "Unsupported meta bitrate" );
+                    /* Ignore the entries without Playstring */
+                    if( psz_mrl != NULL )
+                        vlc_xml_decode( psz_mrl );
+                    p_input = psz_mrl != NULL
+                            ? input_item_New( psz_mrl, psz_title ) : NULL;
+                    if( p_input != NULL )
+                    {
+                        if( psz_now )
+                            input_item_SetNowPlaying( p_input, psz_now );
+                        if( psz_genre )
+                            input_item_SetGenre( p_input, psz_genre );
+                        if( psz_listeners )
+                            msg_Err( p_demux, "Unsupported meta listeners" );
+                        if( psz_bitrate )
+                            msg_Err( p_demux, "Unsupported meta bitrate" );
 
-                    input_item_node_AppendItem( p_subitems, p_input );
-                    input_item_Release( p_input );
+                        input_item_node_AppendItem( p_subitems, p_input );
+                        input_item_Release( p_input );
+                    }
                     FREENULL( psz_title );
                     FREENULL( psz_mrl );
                     FREENULL( psz_genre );

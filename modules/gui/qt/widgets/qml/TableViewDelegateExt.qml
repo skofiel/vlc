@@ -309,7 +309,9 @@ T.Control {
 
                 description: qsTr("Menu")
 
+                // also show it with the keyboard focus (the menu key opens it)
                 visible: delegate.hovered
+                         || delegate.visualFocus
                          || ((delegate.contextMenu?.currentRequest ?? delegate._defaultContextMenuRequestID)
                                     === delegate._contextMenuRequestID
                                 && delegate.contextMenu.visible)

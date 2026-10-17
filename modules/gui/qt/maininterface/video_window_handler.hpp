@@ -27,6 +27,7 @@
 #include <QWindow>
 #include <QObject>
 #include <QPointer>
+#include <QScreen>
 
 #include "qt.hpp"
 
@@ -65,7 +66,8 @@ private:
     bool m_videoFullScreen = false;
     bool m_autoresize = false;
 
-    QScreen* m_lastWinScreen = nullptr;
+    // the screen is destroyed by Qt when it is unplugged
+    QPointer<QScreen> m_lastWinScreen;
 
     bool m_hasWayland = false;
 };

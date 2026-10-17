@@ -17,6 +17,7 @@
  *****************************************************************************/
 #include "qtthemeprovider.hpp"
 #include "defaultthemeproviders.hpp"
+#include "contrast.hpp"
 
 #include "qt.hpp"
 
@@ -164,7 +165,7 @@ static int updatePalette(vlc_qt_theme_provider_t* obj)
         free(accentColor);
     }
 
-    QColor textOnAccent = Qt::white;
+    QColor textOnAccent = textColorOn(accent);
     QColor visualFocus =  sys->m_isDark ? Qt::white : Qt::black;
     QColor shadow = palette.color(QPalette::Normal, QPalette::Shadow);
     shadow.setAlphaF(0.22);
@@ -179,17 +180,17 @@ static int updatePalette(vlc_qt_theme_provider_t* obj)
     QColor negative(sys->m_isDark ? QColor(Qt::darkRed) : "#fde7e9");
     QColor negativeHover = negative.lighter(110);
     QColor negativePressed = negative.lighter(150);
-    QColor textOnNegative(Qt::red);
+    QColor textOnNegative(sys->m_isDark ? "#FF99A4" : "#C42B1C");
 
     QColor neutral(sys->m_isDark ? QColor(Qt::darkYellow) : "#e4dab8");
     QColor neutralHover = neutral.lighter(110);
     QColor neutralPressed = neutral.lighter(150);
-    QColor textOnNeutral(sys->m_isDark ? "#FF8800" : "#FF610A");
+    QColor textOnNeutral(sys->m_isDark ? "#FCE100" : "#9D5D00");
 
     QColor positive(sys->m_isDark ? QColor(Qt::darkGreen) : "#dff6dd");
     QColor positiveHover = positive.lighter(110);
     QColor positivePressed = positive.lighter(150);
-    QColor textOnPositive(Qt::green);
+    QColor textOnPositive(sys->m_isDark ? "#6CCB5F" : "#0F7B0F");
 
     QColor inputBorderNormal = blendColors(palette.color(QPalette::Normal, QPalette::Base),
                                     palette.color(QPalette::Normal, QPalette::Text));

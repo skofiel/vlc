@@ -53,6 +53,7 @@ extern "C" char **environ;
 
 #include <QApplication>
 #include <QDate>
+#include <QFontDatabase>
 #include <QMutex>
 #include <QtQuickControls2/QQuickStyle>
 #include <QLoggingCategory>
@@ -246,6 +247,10 @@ static void ShowDialog   ( intf_thread_t *, int, int, intf_dialog_args_t * );
 #define ICONCHANGE_TEXT N_( "Allow automatic icon changes")
 #define ICONCHANGE_LONGTEXT N_( \
     "This option allows the interface to change its icon on various occasions.")
+
+#define BUNDLED_FONT_TEXT N_( "Use the interface font" )
+#define BUNDLED_FONT_LONGTEXT N_( \
+    "Use the font bundled with the interface (Inter) instead of the system font." )
 
 #define VOLUME_MAX_TEXT N_( "Maximum Volume displayed" )
 
@@ -453,6 +458,8 @@ vlc_module_begin ()
               QT_BGCONE_EXPANDS_LONGTEXT )
 
     add_bool( "qt-icon-change", true, ICONCHANGE_TEXT, ICONCHANGE_LONGTEXT )
+
+    add_bool( "qt-bundled-font", true, BUNDLED_FONT_TEXT, BUNDLED_FONT_LONGTEXT )
 
     add_integer_with_range( "qt-max-volume", 125, 60, 300, VOLUME_MAX_TEXT, nullptr)
 
@@ -795,6 +802,39 @@ static inline void registerMetaTypes()
     qRegisterMetaType<VLCDialog::QuestionType>();
 }
 
+/* Use the font bundled with the interface as the application font (the
+ * glyphs it doesn't have, e.g. for CJK scripts, are taken from other fonts) */
+static void loadBundledFont( qt_intf_t *p_intf )
+{
+    if( !var_InheritBool( p_intf, "qt-bundled-font" ) )
+        return;
+
+    static const char *const files[] = {
+        ":/fonts/Inter-Regular.ttf",
+        ":/fonts/Inter-Medium.ttf",
+        ":/fonts/Inter-SemiBold.ttf",
+        ":/fonts/Inter-Bold.ttf",
+    };
+
+    QString family;
+    for( const char *file : files )
+    {
+        const int id = QFontDatabase::addApplicationFont( QString::fromLatin1( file ) );
+        if( id >= 0 && family.isEmpty() )
+            family = QFontDatabase::applicationFontFamilies( id ).value( 0 );
+    }
+
+    if( family.isEmpty() )
+    {
+        msg_Warn( p_intf, "cannot load the interface font" );
+        return;
+    }
+
+    QFont font = QGuiApplication::font();
+    font.setFamily( family );
+    QGuiApplication::setFont( font );
+}
+
 static void *Thread( void *obj )
 {
     qt_intf_t *p_intf = (qt_intf_t *)obj;
@@ -956,6 +996,8 @@ static void *Thread( void *obj )
     /* Set application direction to locale direction,
      * necessary for  RTL locales */
     app.setLayoutDirection(QLocale().textDirection());
+
+    loadBundledFont( p_intf );
 
     /* All the settings are in the .conf/.ini style */
 #ifdef _WIN32
@@ -1172,7 +1214,8 @@ static void *Thread( void *obj )
             //some part of the probing needs to be executed on the GUI thread and some part will be ran in a background thread,
             //so we defer the execution of this once the app is started. We can't start the task directly as qApp isn't set yet
             //and there are scenarios where the main loop will never be run.
-            QMetaObject::invokeMethod(&app, [&](){
+            // NOTE: capture by value, this is executed after this scope is left
+            QMetaObject::invokeMethod(&app, [p_intf, graphicsApiValue, enableRhiSoftwareRenderer](){
                 // A cached (by then) valid graphics api is found, use it:
                 QQuickWindow::setGraphicsApi(static_cast<QSGRendererInterface::GraphicsApi>(graphicsApiValue.value<int>()));
                 if (p_intf->mainSettings->value(graphicsApiRhiSoftwareKey).value<bool>())

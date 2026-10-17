@@ -547,6 +547,28 @@ vlc_tests += {
 }
 
 vlc_tests += {
+    'name' : 'test_playlist',
+    'sources' : files(
+        'playlist/test.c',
+        'playlist/content.c',
+        'playlist/control.c',
+        'playlist/item.c',
+        'playlist/notify.c',
+        'playlist/player.c',
+        'playlist/playlist.c',
+        'playlist/preparse.c',
+        'playlist/randomizer.c',
+        'playlist/request.c',
+        'playlist/shuffle.c',
+        'playlist/sort.c',
+    ),
+    'suite' : ['src'],
+    'c_args' : ['-DTEST_PLAYLIST'],
+    'link_with' : [libvlccore],
+    'include_directories' : [include_directories('.')],
+}
+
+vlc_tests += {
     'name' : 'input_clock',
     'sources' : files('clock/test/input_clock.c',
         'clock/input_clock.c',

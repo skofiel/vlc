@@ -138,8 +138,9 @@ vlc_playlist_ItemsRemoved(vlc_playlist_t *playlist, size_t index, size_t count)
     if (playlist->current != -1) {
         size_t current = (size_t) playlist->current;
         if (current >= index && current < index + count) {
-            /* current item has been removed */
-            if (index + count < playlist->items.size) {
+            /* current item has been removed (the items have already been
+             * removed from the vector) */
+            if (index < playlist->items.size) {
                 /* select the first item after the removed block */
                 playlist->current = index;
             } else {

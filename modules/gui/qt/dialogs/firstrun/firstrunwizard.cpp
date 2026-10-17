@@ -76,6 +76,9 @@ FirstRunWizard::FirstRunWizard( qt_intf_t *_p_intf, QWidget *parent)
     colorSchemeImages->addButton( ui.lightImage );
     colorSchemeImages->addButton( ui.darkImage );
 
+    /* the dark color scheme is the default one */
+    ui.darkButton->setChecked( true );
+
     /* Setup the layout page */
     ui.layoutGroup->setId( ui.modernButton, 0 );
     ui.layoutGroup->setId( ui.classicButton, 1 );
@@ -300,8 +303,8 @@ void FirstRunWizard::initializePage( int id )
             colorSchemeGroup->setId( schemeButtons.at(i), schemes.at(i).scheme );
             colorSchemeImages->setId( schemeImages.at(i), schemes.at(i).scheme );
             schemeButtons.at(i)->setText( schemes.at(i).text );
-            if( !i ) updateColorLabel( schemeButtons.at(i) );
         }
+        updateColorLabel( colorSchemeGroup->checkedButton() );
     }
     else if ( id == FOLDER_PAGE )
         addDefaults();
@@ -311,7 +314,7 @@ void FirstRunWizard::initializePage( int id )
  * Processes the default options on rejection of the FirstRun Wizard.
  * The default options are:
  * - Yes to metadata
- * - System/Auto colour scheme
+ * - Dark colour scheme
  * - Modern VLC layout
  */
 void FirstRunWizard::reject()
@@ -322,7 +325,7 @@ void FirstRunWizard::reject()
     config_PutInt( "qt-privacy-ask", 0 );
 
     /* Colour Page settings */
-    p_intf->p_mi->getColorScheme()->setCurrentIndex( 0 );
+    p_intf->p_mi->getColorScheme()->setCurrentIndex( ColorSchemeModel::Night );
 
     /* Layout Page settings */
     config_PutInt( "qt-menubar", 0 );

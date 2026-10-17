@@ -37,6 +37,22 @@ T.AbstractButton {
     property int bannerHeight: -1
     property bool showBg: false
 
+    // the button only shows an image
+    Accessible.role: Accessible.Button
+    Accessible.name: {
+        switch (buttonType) {
+        case CSDThemeImage.MINIMIZE:
+            return qsTr("Minimize")
+        case CSDThemeImage.MAXIMIZE:
+            return qsTr("Maximize")
+        case CSDThemeImage.RESTORE:
+            return qsTr("Restore")
+        case CSDThemeImage.CLOSE:
+            return qsTr("Close")
+        }
+        return ""
+    }
+
     background: null
 
     contentItem: CSDThemeImage {

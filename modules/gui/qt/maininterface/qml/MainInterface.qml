@@ -46,6 +46,11 @@ Item {
     Accessible.name: qsTr("Main interface")
     AccessibleCompat.id: "mainInterface"
 
+    // Mirror the interface for right-to-left languages (the application
+    // layout direction is set from the locale)
+    LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft
+    LayoutMirroring.childrenInherit: true
+
     property bool _extendedFrameVisible: MainCtx.windowSuportExtendedFrame
                                       && MainCtx.clientSideDecoration
                                       && (MainCtx.intfMainWindow.visibility === Window.Windowed)
