@@ -1918,6 +1918,39 @@ La especificación del rediseño pide una barra lateral sin subentradas: las sec
 
 **Batería completa tras la fase 7:** 110 OK y los mismos 4 fallos ajenos.
 
+**Fase 8: hecha (ventana y reproductor, secciones 4.1, 4.8, 4.9, 4.10 y 4.14 del análisis del diseño).** Fusionada en `design/rediseno` (`b7785c9`).
+
+| Zona | Commit | Validación |
+|---|---|---|
+| Barra de una fila (4.8) | `65a6e76`, `91d6e42` | Nuevo modo `Inline` de `ControlBar`: con los controles fijos, el tiempo, la barra de progreso y la duración van entre los controles izquierdos y derechos. Nuevo perfil «Default»: anterior, play, siguiente · volumen, pistas de audio, subtítulos, ajustes, cola. Tres controles nuevos (`AUDIO_TRACKS_BUTTON`, `SUBTITLE_TRACKS_BUTTON` y `PLAYER_SETTINGS_BUTTON`, en los huecos reservados 0x2B–0x2D) abren el menú de pistas en su pestaña, sobre el propio botón |
+| Cuña de volumen | `677b37d` | Trapecio, degradado de verde al acento y fondo negro en los temas oscuros |
+| Marco del vídeo | `34000ca` | `qt-pin-controls` pasa a estar activo por defecto. El vídeo va en un marco con margen y esquinas de 8 dp. Como el vídeo se pinta debajo de la interfaz, el marco es un anillo dibujado encima |
+| Barra de título (4.1) | `66c26e2`, `58fdb6f`, `838e9ea` | Reproductor: cono, «…» y botón de contexto («⌂ Home», «Videos»…) que vuelve a la página de la biblioteca; el título va centrado (el nombre del archivo cuando el título es una ruta). Biblioteca: cono, «…» y barra lateral (atrás y adelante están en la cabecera de página desde la fase 5) y el título del medio en reproducción. A la derecha, minimizar, maximizar, **pantalla completa** y cerrar (nuevo tipo `CSDButton::Fullscreen`; en Windows, `HTCLIENT`) |
+| Aviso de reanudación (4.8) | `b10a6d2` | Tarjeta centrada sobre los controles: «You already watched till **00:12** [Continue Watching] ×». La posición sale del progreso guardado en la biblioteca (`PlayerController.restoreTime`) |
+| Pestaña Video (4.9) | `e38f6d5`, `fbe51c7`, `14166d3`, `4449ce3` | Volteo (None, Horizontal, Vertical) y rotación (0–270°) con el filtro `transform` aplicado en caliente (probado: el vídeo sale espejado). También zoom, relación de aspecto, recorte, ajuste y desentrelazado (con `VLCVarChoiceModel.currentRow` nuevo) y las pistas de vídeo. La pestaña Subtitles tiene «Show Preferences» |
+| Menú «…» (4.10) | `fabc983` | Lista plana: las entradas de abrir (con atajos), Open Recent ›, Save Playlist, Convert, Stream · Customize Player, Plugins and Extensions, Settings (Ctrl+P), About (Shift+F1) · los menús clásicos como submenús · Quit |
+| Menús oscuros | `0aa6353` | Con el esquema oscuro, los widgets (menús y diálogos) usan una paleta oscura con los tokens 4.14 y el acento. Antes solo pasaba con Qt 6.8 y un tema de plataforma que lo siguiera |
+| `NEWS` | `0442ad7` | |
+
+**Entorno de la fase 8:**
+- Se han instalado las cabeceras de GL/EGL de Mesa y las extensiones xcb (composite, damage, xfixes, keysyms y xkb). Con ellas se compilan las salidas de vídeo OpenGL y el compositor X11 de Qt, y el vídeo se ve en Xvfb. Hasta ahora las capturas mostraban el reproductor de audio.
+- Sin un gestor de ventanas, el compositor X11 no redimensiona su superficie cuando el tamaño se cambia desde fuera. Por eso algunas capturas son de 600×420, y las de la biblioteca usan `--qt-compositor=dummy`.
+
+**Reservas de la fase 8:**
+- **No implementado del diseño:**
+  - Playback: «Show Subtitle Timeline/Waveform on Seekbar», «Reverse» y «Sleep Timer», que VLC no tiene.
+  - Video: «HDR», «Resolution» y «Render».
+  - Subtitles: la separación de pistas incrustadas y externas, la sincronización y la apariencia en la misma pestaña (siguen en el submenú «Synchronize» y en las preferencias).
+  - Menú «…»: «Profile ›» (los perfiles Movies/Shows/Music/Work no existen en VLC) y «Keyboard Shortcuts».
+  - Customize Player: la entrada abre el editor de barras actual, sin las categorías del diseño (4.12).
+  - Barra lateral compacta, solo con iconos.
+- **Marcadores:** en el modo de una fila no se muestran bajo la barra de progreso.
+- **Iconos:** se usan los glifos existentes (`visualization` para el audio). Los del diseño piden regenerar `VLCIcons.ttf`.
+- **Volumen en Xvfb:** sin una salida de audio real el volumen no se informa y la cuña sale vacía. En la vista previa del editor de barras se pinta al 50 %.
+- **Hallazgo nuevo (preexistente):** al cerrar con el compositor X11, UBSan informa de un acceso a miembro sobre un `QWindow` ya destruido en el lambda de `visibilityChanged` de `CompositorX11RenderWindow` (`compositor_x11_renderwindow.cpp:364` y `:374`). Antes no se veía porque el compositor no se compilaba.
+
+**Batería completa tras la fase 8:** 110 OK y los mismos 4 fallos ajenos.
+
 ### 7.3 Icono de la aplicación
 
 Commit `2f45fdd` (icons: new application icon). A petición del propietario, el icono de VLC (el cono) se sustituye por un «play» de tres trazos entrelazados, redibujado en vectorial a partir de la propuesta inicial:
