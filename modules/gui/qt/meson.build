@@ -1303,6 +1303,20 @@ if qt6_dep.found()
         'dependencies': [qt6_dep, qt_extra_deps],
     }
 
+    qmllint = find_program('qmllint', 'qmllint6',
+        dirs: qt6_dep.get_variable(pkgconfig: 'bindir', configtool: '-query QT_INSTALL_BINS'),
+        required: false)
+    if qmllint.found()
+        test('qmllint', prog_python,
+            args: [
+                files('scripts/qmllint.py'),
+                '--qmllint', qmllint,
+                '--builddir', meson.current_build_dir(),
+            ],
+            suite: 'qt',
+            timeout: 300)
+    endif
+
     qtest_qt6_dep = dependency('qt6', version: '=' + qt6_dep.version(), modules: ['Test'], required: false)
     if qtest_qt6_dep.found()
         vlc_tests += {
