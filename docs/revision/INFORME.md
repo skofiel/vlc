@@ -1866,6 +1866,58 @@ La especificación del rediseño pide una barra lateral sin subentradas: las sec
 
 **Batería completa tras la fase 6:** 110 OK y los mismos 4 fallos ajenos.
 
+**Fase 7: hecha (pulido).** Rama `claude/wonderful-pascal-entcah`, fusionada en `design/rediseno` (`df9a0c6` y `f7aead7`).
+
+**Correcciones P2, un commit cada una:**
+
+| Hallazgo | Commit | Validación |
+|---|---|---|
+| CORE‑13 | `7be6bc9` player: timer: do not truncate the number of intervals | Tests `test_src_player_timers` OK |
+| CORE‑14 | `a1c2c1c` player: only allow the categories of cat2vars in assertions | Tests del player OK |
+| CORE‑15 | `32cde11` player: fix a leak and a format in track and chapter selection | `_("Chapter %zu")`; se liberan las dos reservas |
+| SEC‑11 | `ccbf80e` demux: wms: peek all the bytes that are compared | Peek de 11 bytes y `memcmp` |
+| SEC‑09 | `42e9364` demux: subtitle: compare the start times without subtracting them | `(a > b) - (a < b)`, sin desbordamiento |
+| SEC‑05 | `c859131` demux: wpl: do not log an unset tag name at the end of the file | `psz_name = NULL` y «(eof)» en los mensajes |
+| CORE‑10 | `6094fa6` player: title: release the title that fails to be created | `break` en el primer capítulo sin nombre y `count = title_idx + 1` |
+| CORE‑09 | `d962550` player: medialib: release the playback states of the media library | Nueva `vlc_player_input_ReleaseMlStates()`: antes de cada restauración, al final de `UpdateMLStates` y en `vlc_player_input_Delete` |
+| QT‑10 | `8612a83` qt: bookmark model: do not add a player listener twice | `initModel()` quita el listener anterior; `setPlayer()` deja `m_listener` a nulo |
+| QT‑11 | `b62527d` qt: video window: do not read the window states from the vout threads | Los estados se guardan en un atómico que actualiza el hilo de la interfaz (`windowStateChanged`) |
+| SEC‑08 | `2094df9` demux: asx: fix leaks and the ENTRYREF address | ASX de prueba con REF y MOREINFO repetidos: ASan sin fugas; `ENTRYREF` ahora usa el `HREF` resuelto respecto a la lista (antes cogía el primer atributo que **no** era `HREF`) |
+| SEC‑10 | `a320fe4` codec: scte27: only reassemble the segments in order | Se exige `index == anterior + 1`, lo que acota el mensaje (4096 × 4086 bytes como máximo); `realloc` comprobado |
+| SEC‑06 | `c9dae0a` codec: subsdec: append the text without copying it again | Arnés que llama a `ParseSubtitles`: salida idéntica en un texto con etiquetas; **81 s para 256 KiB antes, 0,05 s para 4 MiB después** (con ASan) |
+| CORE‑12 | `00e22d3` player: aout: remove the callbacks from the aout that has them | El player retiene el aout donde registró los callbacks y solo los quita de ese |
+| CORE‑11 | `57f953b` playlist: keep the randomizer in sync on allocation failure | Nueva `randomizer_Reserve()` antes de insertar; si al pasar a aleatorio no caben los elementos, el orden sigue normal. `test_playlist` OK |
+| QT‑09 | `b49c94f` qt: extensions: ignore the queued updates of a deleted dialog | Ver la nota |
+| SEC‑07 (parcial) | `dcef16e` demux: playlist: fix up the addresses that are kept as they are | El fallback devuelve la URI normalizada por `vlc_uri_fixup` y no la cadena original |
+
+**Accesibilidad e i18n:**
+
+| Hallazgo | Commit | Validación |
+|---|---|---|
+| A11Y‑03 | `d606cd9` qml: expose the role and the selection of the list and table rows | Cola: `ListItem`; tablas: `Row` con nombre (`title` o `name`); `selected` y `onPressAction` en las dos |
+| A11Y‑04 | `a59c2fa` qml: tell the state of the mute, record and repeat buttons | «Mute»/«Unmute», «Record»/«Stop recording», «Repeat off/all/one», más `Accessible.checked` |
+| A11Y‑06 | `a3d773c` qt: about: use buttons for the license, authors and credits | Probado en Xvfb: Tab enfoca «Credits» y Espacio abre los créditos |
+| A11Y‑08 | `a352495` qt: add an option to reduce the motion of the interface | Nueva opción `qt-reduce-motion` (ajustes › Interface › Accessibility): duraciones a 0 y sin animaciones infinitas (títulos largos, botón de grabar, nieve). Arranca sin errores QML |
+| A11Y‑09 | `26f4eca` qml: scale the fixed sizes… | `VLCStyle.dp()` en el editor de barras, la cola separada y los campos de texto |
+| I18N‑02 | `fbe29d1` qt: use plural forms for the number of videos and downloads | El `.pot` de Meson lleva `msgid`/`msgid_plural` para «%1 Video» y «%1 download» |
+| I18N‑03 | `d7774ac` qt: do not build translatable strings by concatenation | «About %1», «Go to time:», «Broadcast: %1»; HTML y colores fuera de las cadenas; nombre de archivo escapado con el nuevo `Helpers.escapeStyledText()` |
+| I18N‑04 | `d719503` qml: format the numbers in the language of the interface | Nuevos `Helpers.formatNumber()` y `Helpers.numberFromFormattedText()`, probados en un motor QML: «1,25» en es/de y «1.25» en en; se aceptan «ms %1» y «%1 мс» |
+| I18N‑05 | `eca7773` qt: capitalize the visible strings… | «Cancel», «Filter», «Fullscreen»/«Exit fullscreen», «%1 s» y «%1 ms» |
+| `NEWS` | `1d1cf34` NEWS: add the changes of the Qt interface | Novedades de las fases 3 a 7 |
+
+**Notas de la fase 7:**
+- **QT‑09:** no se ha usado `Qt::BlockingQueuedConnection`, que proponía el informe, porque puede bloquearse al cerrar: el hilo de Qt hace `vlc_join` del hilo Lua al desactivar las extensiones. En su lugar, el proveedor Qt guarda los diálogos que siguen vivos, con un mutex recursivo:
+  - un diálogo sale del registro cuando la extensión lo borra sin que la interfaz lo haya creado (es el caso en que la extensión no espera);
+  - las actualizaciones encoladas de un diálogo que ya no está se ignoran;
+  - `b_kill` se lee con el diálogo bloqueado.
+
+  Compila y pasa los tests, pero no se ha probado con una extensión real.
+- **SEC‑07** sigue abierto en su parte de diseño: ninguna política de origen impide que una lista remota apunte a `file://` o a rutas UNC. Hace falta decidir el comportamiento (rechazar o preguntar) antes de implementarlo.
+- **Hallazgo nuevo (intermitente):** `test_libvlc_media_player_record` falló una vez con una fuga de 296 bytes en `AddStream` de `modules/mux/asf.c`, creada por `stream_out/record.c` al cerrar la grabación (`OutputStart` desde `Del`). No se reproduce al repetirlo (5 de 5 OK) y no pasa por el código tocado.
+- `test_qt_navigation_model` y `test_qt_thread_runner` fallaron una vez con la batería completa en paralelo y pasan al repetirla; los dos son ajenos a esta fase.
+
+**Batería completa tras la fase 7:** 110 OK y los mismos 4 fallos ajenos.
+
 ### 7.3 Icono de la aplicación
 
 Commit `2f45fdd` (icons: new application icon). A petición del propietario, el icono de VLC (el cono) se sustituye por un «play» de tres trazos entrelazados, redibujado en vectorial a partir de la propuesta inicial:
