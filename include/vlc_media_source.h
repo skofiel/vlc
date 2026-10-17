@@ -116,6 +116,11 @@ struct vlc_media_tree_callbacks
     /**
      * Called when the preparsing of a node is complete
      *
+     * This is called for every preparsing request that ended (successfully,
+     * on error or after a cancellation), even if the node has been removed
+     * from the tree meanwhile. In that case, the node is not part of the tree
+     * and only its p_item member is valid.
+     *
      * \param tree     the media tree
      * \param node     the node being parsed
      * \param status   the reason for the preparsing termination
