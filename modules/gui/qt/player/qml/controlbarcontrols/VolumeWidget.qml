@@ -35,9 +35,9 @@ T.Pane {
         return (volControl.position > _fullvolpos) ? theme.fg.negative : theme.fg.primary
     }
 
-    // gradient of the volume wedge: low volume, 100% (accent), maximum
+    // gradient of the volume wedge: low volume (green), 100% (accent), maximum
     readonly property color _lowColor: volControl.colorContext.fg.positive
-    readonly property color _fullColor: volControl.colorContext.fg.primary
+    readonly property color _fullColor: volControl.colorContext.accent
     readonly property color _maxColor: volControl.colorContext.fg.negative
 
     readonly property var _player: paintOnly ? ({ muted: false, volume: .5 }) : Player
@@ -265,7 +265,10 @@ T.Pane {
 
                 readonly property real position: volControl.visualPosition
                 readonly property real fullPosition: Math.min(root._fullvolpos, 1.0)
-                readonly property color emptyColor: Qt.alpha(volControl.colorContext.fg.secondary, 0.2)
+                // black in the dark themes, as in the design
+                readonly property color emptyColor: volControl.colorContext.palette.isDark
+                                                    ? "black"
+                                                    : Qt.alpha(volControl.colorContext.fg.secondary, 0.2)
                 readonly property color markColor: volControl.colorContext.fg.secondary
                 readonly property color focusColor: volControl.colorContext.visualFocus
                 readonly property bool focused: volControl.visualFocus
@@ -287,11 +290,12 @@ T.Pane {
                     const h = height
                     ctx.reset()
 
-                    // right triangle, growing from left to right
+                    // trapezoid, growing from left to right
                     ctx.beginPath()
                     ctx.moveTo(0, h)
                     ctx.lineTo(w, h)
                     ctx.lineTo(w, 0)
+                    ctx.lineTo(0, h * 0.6)
                     ctx.closePath()
 
                     ctx.save()
@@ -323,7 +327,7 @@ T.Pane {
                 parent: volControl.background
 
                 x : parent.width * root._fullvolpos
-                y: parent.height * (1 - root._fullvolpos) - VLCStyle.dp(2, VLCStyle.scale)
+                y: parent.height * 0.6 * (1 - root._fullvolpos) - VLCStyle.dp(2, VLCStyle.scale)
                 width: VLCStyle.dp(1, VLCStyle.scale)
                 height: parent.height - y
 
