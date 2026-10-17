@@ -511,7 +511,11 @@ vlc_player_SelectEsIdList(vlc_player_t *player,
         vlc_alloc(track_count + 1, sizeof(vlc_es_id_t *));
 
     if (allocated_ids == NULL || osd_ids == NULL)
+    {
+        free(allocated_ids);
+        free(osd_ids);
         return 0;
+    }
 
     track_count = 0;
     for (size_t i = 0; es_id_list[i] != NULL && track_count < max_tracks; i++)
@@ -975,7 +979,7 @@ vlc_player_SelectChapterIdx(vlc_player_t *player, size_t index)
     int ret = input_ControlPushHelper(input->thread, INPUT_CONTROL_SET_SEEKPOINT,
                                       &(vlc_value_t){ .i_int = index });
     if (ret == VLC_SUCCESS)
-        vlc_player_osd_Message(player, _("Chapter %ld"), index);
+        vlc_player_osd_Message(player, _("Chapter %zu"), index);
 }
 
 void
