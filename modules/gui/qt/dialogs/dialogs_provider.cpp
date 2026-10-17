@@ -425,7 +425,12 @@ void DialogsProvider::mediaInfoDialog( const MLItemId& itemId )
     assert( ml );
 
     input_item_t * const inputItem = vlc_ml_get_input_item( ml, itemId.id );
-    assert( inputItem );
+    if ( !inputItem )
+    {
+        // the media may have been removed meanwhile (device unplugged...)
+        msg_Warn( p_intf, "media %" PRId64 " is not available", itemId.id );
+        return;
+    }
 
     const SharedInputItem sharedInputItem { inputItem, false };
     if ( input_item_IsPreparsed( inputItem ) )
