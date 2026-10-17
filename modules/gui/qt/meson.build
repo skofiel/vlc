@@ -868,6 +868,7 @@ qml_modules += {
         'widgets/qml/ActionButtonPrimary.qml',
         'widgets/qml/BannerTabButton.qml',
         'widgets/qml/BannerCone.qml',
+        'widgets/qml/Breadcrumbs.qml',
         'widgets/qml/BusyIndicatorExt.qml',
         'widgets/qml/CaptionLabel.qml',
         'widgets/qml/CheckButton.qml',
