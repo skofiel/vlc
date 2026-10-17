@@ -89,7 +89,7 @@ Confianza: **Alta** = flujo verificado en el código. **Media** = verificado, pe
 | A11Y‑02 | P1 | Alta | Alta | `modules/gui/qt/widgets/qml/TableViewDelegateExt.qml:306‑344` | El menú contextual de las tablas no se puede abrir con el teclado |
 | A11Y‑05 | P1 | Alta | Alta | `modules/gui/qt/style/systempalette.cpp:495‑513` | Contrastes de la paleta clara por debajo de WCAG AA (verde 1,17:1, enlaces 2,9:1) |
 | A11Y‑07 | P1 | Alta | Media | `modules/gui/qt/qt.cpp:958` | La interfaz QML no se refleja nunca en idiomas RTL |
-| I18N‑01 | P0 | Alta | Alta | `po/meson.build:6‑17`, `po/POTFILES.in` | Meson no extrae `qsTr` ni los plurales de `qtr`, y faltan 3 archivos en `POTFILES.in` |
+| I18N‑01 | P0 | Alta | Alta | `po/meson.build:6‑17`, `po/POTFILES.in` | Meson no extrae `qsTr` ni los plurales de `qtr`, y faltan archivos en `POTFILES.in` (3 de Qt detectados en la revisión, 135 en total, ver 7.2) |
 | CORE‑05 | P1 | Media | Alta | `src/playlist/content.c:140` | Usa el tamaño de la lista ya reducido: se detiene la reproducción aunque queden elementos |
 | CORE‑06 | P1 | Media | Alta | `src/playlist/sort.c:325` | `CompareOptionalIntegers` mira `a` en lugar de `has_a`, así que el comparador no es antisimétrico |
 | CORE‑07 | P1 | Media | Alta | `src/playlist/sort.c:185`, `:456` | Ordenar por tamaño o fecha falla entero si un elemento no tiene `.stat` |
@@ -1674,6 +1674,47 @@ Reglas generales:
 | **7. Pulido** | Cierre | P2 restantes, A11Y‑08 (reducir movimiento), I18N‑02 a I18N‑05, documentación y `NEWS` | Sin P0/P1 abiertos |
 
 Las fases 0 a 2 se pueden repartir en varios PR pequeños e independientes. A partir de la 3, cada fase es un PR que se revisa con capturas de pantalla.
+
+### 7.1 Decisión de tecnología
+
+**Se mantiene Qt 6/QML.** No se cambia de tecnología.
+- El rediseño cabe en los puntos de extensión que ya existen (sección 5).
+- La integración del vídeo (compositores DComp, Wayland y X11), los modelos de la biblioteca y la accesibilidad nativa ya están resueltos en QML. Con otra tecnología habría que rehacerlos.
+- El fork puede seguir incorporando los cambios de VideoLAN, cuya interfaz oficial de la versión 4.0 es esta misma.
+
+Dentro de Qt se añaden tres cambios de arquitectura:
+1. **Menús en QML**, para que puedan seguir el tema.
+2. **Ajustes en QML** (fase 6).
+3. **Una comprobación en la CI** de que `meson.build` y `Makefile.am` registran los mismos archivos QML.
+
+### 7.2 Estado de la ejecución
+
+Rama `claude/wonderful-pascal-entcah`, sobre `master` (`4953f0b`). Validado con una compilación Meson con ASan y UBSan.
+
+**Fase 0: hecha.** Un commit por hallazgo:
+
+| Hallazgo | Commit | Validación |
+|---|---|---|
+| CORE‑04 | `9b80512` playlist: export: fix swapped error labels | Revisión. El harness de tests de la playlist no puede ejercitar `export` |
+| CORE‑01 | `28d5463` input: fix out-of-bounds access on previous chapter without chapters | Test nuevo en `test/src/player/titles.c`. **Sin el arreglo, ASan da *heap-buffer-overflow* en `input.c:2388`** |
+| CORE‑02 | `b2a500b` input: send the attachments event without the item lock | Test nuevo en `test/src/player/attachments.c` (el listener lee el item). **Sin el arreglo, salta el assert de mutex ya tomado** |
+| CORE‑03 | `59ed028` player: metadata: fix lock inversion with the audio meter | Test de estrés en `test/src/player/loudness.c`. El interbloqueo antiguo depende de la temporización y **no se reproduce de forma fiable** (0/10 ejecuciones), así que el test solo comprueba que la secuencia es segura |
+| QT‑01 | `3ee3e8b` qt: thumbnailcollector: fix deadlock and use-after-free on destruction | Compila. Sin test automático |
+| QT‑02 | `970ca5c` media_tree: always notify the end of the preparsing | Arreglo en el núcleo (siempre se notifica el fin del preparse) y en Qt (el semáforo solo se libera para la petición propia, y también si `Preparse` falla). Compila. Sin test automático |
+| SEC‑01 | `5dcda8c` demux: ram: fix out-of-bounds read/write in clipinfo parsing | Test nuevo `test_modules_playlist_ram`. **Sin el arreglo, ASan da *heap-buffer-overflow* en `strchr`** |
+
+**Fase 1: hecha.**
+
+| Tarea | Commit | Resultado |
+|---|---|---|
+| I18N‑01, extracción con Meson | `a6d1a05` po: meson: extract qsTr() and plural qtr() strings | El objetivo `vlc-pot` de Meson pasa de 0 a 495 referencias a QML |
+| I18N‑01, `POTFILES` | `6b0f64e` po: add missing files to POTFILES.in and check it in a test | **Faltaban 135 archivos, no 3.** Se añaden y se crea el test `potfiles` (`po/check_potfiles.py`) |
+| `qmllint` | `062fd2d` qt: meson: add a qmllint test | Test `qmllint` (suite `qt`), limitado a las comprobaciones que no dependen de los tipos C++ |
+| Bug encontrado por `qmllint` | `b0cd876` qml: fix signal handlers declaring more parameters than the signal | `ServicesHomeDisplay.qml` perdía el motivo del foco (`reason` llegaba como `undefined`) al volver al inicio de los servicios |
+| Contraste | `3c6e66d` qt: meson: add a contrast test for the palettes | Test `contrast`. Los 13 pares que ya no cumplen están en `scripts/contrast_known_issues.txt` (A11Y‑05, fase 2); cualquier par nuevo que no cumpla hace fallar el test |
+| Fuzzing de listas | `388ee42` test: demux-run: allow fuzzing the playlist demuxers | Variable `VLC_TARGET_URL` y llamada a `readdir`. **Con un `.b4s` mínimo ya reproduce SEC‑03** (SEGV en `b4s.c:189`) |
+
+**Tests que fallan en el entorno de validación sin relación con estos cambios:** `http_tunnel_test`, `test_qt_renderer_manager`, `test_qt_dialog_model` y `test_libvlc_media_player_record` dan fugas con LeakSanitizer; `test_src_preparser_thumbnail_to_files` falla por falta de formato PNG; `test_src_media_source` y `test_libvlc_media_discoverer` fallan porque no hay `plugins.dat`; `test_modules_codec_hxxx_helper` da un aviso de UBSan. `test_src_media_source` se comprobó también sin los cambios, y falla igual.
 
 ---
 
