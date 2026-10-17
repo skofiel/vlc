@@ -8,6 +8,13 @@ La compilación se hace con la misma imagen Docker que usa la CI de VideoLAN.
 - **Resultado**: `vlc-<versión>-win64-<commit>.exe` (más el `.msi`, si sale) y una versión portable,
   en `D:\Proyectos\VLC-instaladores`.
 
+> **Sin instalar nada:** cada push a `design/rediseno` lanza el workflow
+> [`.github/workflows/windows-installer.yml`](../../../../.github/workflows/windows-installer.yml).
+> Ese workflow compila lo mismo en los servidores de GitHub. El instalador y la versión portable se descargan desde
+> *Actions › la ejecución › Artifacts*. La primera ejecución tarda horas, porque compila los contribs.
+> Las siguientes los toman de la caché.
+> Lo de abajo solo hace falta para compilar en tu propio equipo, y requiere tener la virtualización (SVM o VT-x) activada en la BIOS.
+
 ## 1. Lo que hay que saber antes
 
 | | |
