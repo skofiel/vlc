@@ -51,7 +51,15 @@ Widgets.IconToolButton {
 
     // Events
 
-    onClicked: menuLoader.item.openTab(root.tab)
+    onClicked: {
+        // over the button, inside the player
+        const menu = menuLoader.item
+        const center = root.mapToItem(menu.parent, root.width / 2, 0).x
+        menu.x = Helpers.clamp(center - menu.width / 2,
+                               VLCStyle.margin_small,
+                               menu.parent.width - menu.width - VLCStyle.margin_small)
+        menu.openTab(root.tab)
+    }
 
     // Children
 
@@ -63,7 +71,6 @@ Widgets.IconToolButton {
 
             parent: root._parentItem
 
-            x: 0
             y: (parent.positionSliderY - height)
             z: 1
 
