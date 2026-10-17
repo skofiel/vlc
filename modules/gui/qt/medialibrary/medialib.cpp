@@ -64,10 +64,14 @@ static void convertMLItemToPlaylistMedias(vlc_medialibrary_t* ml, const MLItemId
             return;
 
         auto mediaRange = ml_range_iterate<vlc_ml_media_t>( media_list );
-        std::transform(mediaRange.begin(), mediaRange.end(), std::back_inserter(medias), [&](vlc_ml_media_t& m) {
+        for (vlc_ml_media_t& m : mediaRange)
+        {
+            // skip the medias which are not available anymore (device
+            // unplugged...)
             SharedInputItem item(vlc_ml_get_input_item( ml, m.i_id ), false);
-            return vlc::playlist::Media(item.get(), options);
-        });
+            if (item)
+                medias.push_back(vlc::playlist::Media(item.get(), options));
+        }
     }
 }
 
