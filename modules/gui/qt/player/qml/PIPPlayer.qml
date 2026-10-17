@@ -171,7 +171,7 @@ T.Control {
             }
 
             font.pixelSize: VLCStyle.icon_PIP
-            description: qsTr("close video")
+            description: qsTr("Close video")
 
             AccessibleCompat.id: "pipCloseButton"
 
@@ -194,7 +194,7 @@ T.Control {
 
             font.pixelSize: VLCStyle.icon_PIP
 
-            description: qsTr("maximize player")
+            description: qsTr("Maximize player")
 
             AccessibleCompat.id: "pipFullscreenButton"
 

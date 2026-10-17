@@ -155,7 +155,65 @@ T.Pane {
                 }
 
                 Navigation.parentItem: root
-                Navigation.downItem: preferenceButton
+                // "Add item" entry, in the footer
+                readonly property Item addItemButton: (footerItem as Column)?.button ?? null
+
+                Navigation.downItem: addItemButton?.visible ? addItemButton : preferenceButton
+
+                footer: Column {
+                    width: ListView.view.contentWidth
+
+                    property alias button: addItemButton
+
+                    visible: MainCtx.mediaLibraryAvailable
+
+                    topPadding: VLCStyle.margin_xsmall
+
+                    Rectangle {
+                        x: root.safeAreaLeftMargin + VLCStyle.margin_small
+                        width: parent.width - x - root.safeAreaRightMargin - VLCStyle.margin_small
+                        height: VLCStyle.margin_xxxsmall
+
+                        color: theme.separator
+                    }
+
+                    // folders are added to the library from the network view
+                    SideNavigationDelegate {
+                        id: addItemButton
+
+                        width: parent.width
+                        height: VLCStyle.buttonHeightNavigationPane
+
+                        visible: MainCtx.mediaLibraryAvailable
+
+                        leftPadding: root.safeAreaLeftMargin + VLCStyle.margin_xsmall
+                        rightPadding: root.safeAreaRightMargin
+
+                        leftInset: root.safeAreaLeftMargin + implicitLeftInset
+                        rightInset: root.safeAreaRightMargin + implicitRightInset
+
+                        iconTxt: VLCIcons.add
+                        text: qsTr("Add item")
+
+                        T.ToolTip.text: qsTr("Add a folder to the media library")
+                        T.ToolTip.visible: hovered || visualFocus
+                        T.ToolTip.delay: VLCStyle.delayToolTipAppear
+
+                        showText: root.delegateShowText
+
+                        focusPolicy: Qt.StrongFocus
+
+                        onClicked: root.itemClicked(["network", "home"], this)
+
+                        Navigation.parentItem: root
+                        Navigation.upItem: listView
+                        Navigation.downItem: preferenceButton
+
+                        Keys.priority: Keys.AfterItem
+                        Keys.onPressed: (e) => Navigation.defaultKeyAction(e)
+                        Keys.onReleased: (e) => Navigation.defaultKeyReleaseAction(e)
+                    }
+                }
 
                 delegate: SideNavigationDelegate {
                     id: delegate
@@ -280,13 +338,13 @@ T.Pane {
 
                 showText: root.delegateShowText
 
-                onClicked: DialogsProvider.prefsDialog()
+                onClicked: DialogsProvider.settingsDialog()
 
                 //SideNavigationDelegate is an ItemDelegate and has NoFocus by default
                 focusPolicy: Qt.StrongFocus
 
                 Navigation.parentItem: root
-                Navigation.upItem: listView
+                Navigation.upItem: listView.addItemButton?.visible ? listView.addItemButton : listView
 
                 Keys.priority: Keys.AfterItem
                 Keys.onPressed: (e) => Navigation.defaultKeyAction(e)

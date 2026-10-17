@@ -369,7 +369,7 @@ Item {
                     Widgets.TextToolButton {
                         id: loginCancel
                         Layout.fillWidth: true
-                        text: qsTr("cancel")
+                        text: qsTr("Cancel")
 
                         Navigation.upItem: savePassword
                         Navigation.rightItem: loginOk
@@ -592,6 +592,26 @@ Item {
         id: customDialog
         rootWindow: root.bgContent
         onAboutToHide: restoreFocus()
+    }
+
+    Loader {
+        id: settingsDialogLoader
+        active: false
+        source: "qrc:///qt/qml/VLC/Dialogs/SettingsDialog.qml"
+
+        onLoaded: {
+            item.rootWindow = Qt.binding(() => root.bgContent)
+            item.aboutToHide.connect(root.restoreFocus)
+        }
+
+        Connections {
+            target: DialogsProvider
+
+            function onShowSettingsDialog() {
+                settingsDialogLoader.active = true
+                settingsDialogLoader.item.open()
+            }
+        }
     }
 
     Loader {

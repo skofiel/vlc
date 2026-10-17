@@ -181,6 +181,18 @@ QtObject {
         return height / 2
     }
 
+    // seek bar of the control bar
+    readonly property int seekBar_height: MainCtx.dp(14, scale)
+    readonly property int seekBar_handleWidth: MainCtx.dp(5, scale)
+
+    // volume wedge of the control bar
+    readonly property int volumeWedge_width: MainCtx.dp(72, scale)
+    readonly property int volumeWedge_height: MainCtx.dp(18, scale)
+
+    // play/pause pill of the control bar
+    readonly property int play_pill_width: MainCtx.dp(54, scale)
+    readonly property int play_pill_height: MainCtx.dp(30, scale)
+
     //button
     readonly property int button_width_small: MainCtx.dp(64, scale)
     readonly property int button_width_normal: MainCtx.dp(96, scale)
@@ -234,7 +246,6 @@ QtObject {
 
     readonly property int gridItemSelectedBorder: MainCtx.dp(8, scale)
 
-    readonly property int gridItem_newIndicator: MainCtx.dp(8, scale)
 
     readonly property int column_width: MainCtx.dp(114, scale)
 
@@ -288,17 +299,20 @@ QtObject {
 
     // durations. Values are aligned on Kirigami
 
+    // the animations are disabled, and the infinite ones must not run
+    readonly property bool reduceMotion: MainCtx.reduceMotion
+
     //should be used for animation that benefits from a longer animation than duration_long
-    readonly property int duration_veryLong: 400
+    readonly property int duration_veryLong: reduceMotion ? 0 : 400
 
     //should be used for longer animation (opening/closing panes & dialogs)
-    readonly property int duration_long: 200
+    readonly property int duration_long: reduceMotion ? 0 : 200
 
     //should be used for short animations (hovering, accuenting UI event)
-    readonly property int duration_short: 100
+    readonly property int duration_short: reduceMotion ? 0 : 100
 
     //should be used for near instant animations
-    readonly property int duration_veryShort: 50
+    readonly property int duration_veryShort: reduceMotion ? 0 : 50
 
     /* human time reaction, how much time before the user should be informed that something
      * is going on, or before something should be automatically automated,
@@ -328,7 +342,6 @@ QtObject {
     readonly property url noArtVideoCover: "qrc:///placeholder/noart_videoCover.svg";
 
     // New indicator
-    readonly property url newIndicator: "qrc:///misc/new_indicator.svg";
 
     // ControlBar
 

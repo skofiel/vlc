@@ -53,7 +53,7 @@ Item {
     SequentialAnimation {
         id: scrollAnimation
 
-        running: root.forceScroll && root._needsToScroll
+        running: root.forceScroll && root._needsToScroll && !VLCStyle.reduceMotion
         loops: Animation.Infinite
 
         onStopped: {

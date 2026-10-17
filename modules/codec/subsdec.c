@@ -33,6 +33,7 @@
 #include <limits.h>
 #include <errno.h>
 #include <ctype.h>
+#include <stdckdint.h>
 
 #include <vlc_common.h>
 #include <vlc_plugin.h>
@@ -482,24 +483,53 @@ static subpicture_t *ParseText( decoder_t *p_dec, block_t *p_block )
     return p_spu;
 }
 
-static bool AppendCharacter( text_segment_t* p_segment, char c )
+/* Text appended to the current segment, without copying it again on every
+ * append */
+typedef struct
 {
-    char* tmp;
-    if ( asprintf( &tmp, "%s%c", p_segment->psz_text ? p_segment->psz_text : "", c ) < 0 )
+    text_segment_t *p_segment;
+    size_t i_length;
+    size_t i_capacity;
+} segment_text_t;
+
+static bool AppendStringN( segment_text_t* p_text, text_segment_t* p_segment,
+                           const char* psz_str, size_t i_str )
+{
+    if ( p_text->p_segment != p_segment )
+    {
+        /* The text of a new segment is allocated to its exact length */
+        p_text->p_segment = p_segment;
+        p_text->i_length = p_segment->psz_text ? strlen( p_segment->psz_text ) : 0;
+        p_text->i_capacity = p_segment->psz_text ? p_text->i_length + 1 : 0;
+    }
+
+    size_t i_needed;
+    if ( ckd_add( &i_needed, p_text->i_length, i_str ) ||
+         ckd_add( &i_needed, i_needed, 1 ) )
         return false;
-    free( p_segment->psz_text );
-    p_segment->psz_text = tmp;
+    if ( i_needed > p_text->i_capacity )
+    {
+        size_t i_capacity = __MAX( __MAX( p_text->i_capacity * 2, i_needed ), 64 );
+        char* psz_text = realloc( p_segment->psz_text, i_capacity );
+        if ( unlikely( psz_text == NULL ) )
+            return false;
+        p_segment->psz_text = psz_text;
+        p_text->i_capacity = i_capacity;
+    }
+    memcpy( &p_segment->psz_text[p_text->i_length], psz_str, i_str );
+    p_text->i_length += i_str;
+    p_segment->psz_text[p_text->i_length] = '\0';
     return true;
 }
 
-static bool AppendString( text_segment_t* p_segment, const char* psz_str )
+static bool AppendCharacter( segment_text_t* p_text, text_segment_t* p_segment, char c )
 {
-    char* tmp;
-    if ( asprintf( &tmp, "%s%s", p_segment->psz_text ? p_segment->psz_text : "", psz_str ) < 0 )
-        return false;
-    free( p_segment->psz_text );
-    p_segment->psz_text = tmp;
-    return true;
+    return AppendStringN( p_text, p_segment, &c, 1 );
+}
+
+static bool AppendString( segment_text_t* p_text, text_segment_t* p_segment, const char* psz_str )
+{
+    return AppendStringN( p_text, p_segment, psz_str, strlen( psz_str ) );
 }
 
 static char* ConsumeAttribute( const char** ppsz_subtitle, char** ppsz_attribute_value )
@@ -746,6 +776,7 @@ static text_segment_t* ParseSubtitles( int *pi_align, const char *psz_subtitle )
     text_segment_t* p_first_segment;
     style_stack_t* p_stack = NULL;
     tag_stack_t* p_tag_stack = NULL;
+    segment_text_t text = { NULL, 0, 0 };
 
     //FIXME: Remove initial allocation? Might make the below code more complicated
     p_first_segment = p_segment = text_segment_New( "" );
@@ -763,7 +794,7 @@ static text_segment_t* ParseSubtitles( int *pi_align, const char *psz_subtitle )
             {
                 if( !strcasecmp( psz_tagname, "br" ) )
                 {
-                    if ( !AppendCharacter( p_segment, '\n' ) )
+                    if ( !AppendCharacter( &text, p_segment, '\n' ) )
                     {
                         free( psz_tagname );
                         goto fail;
@@ -873,9 +904,9 @@ static text_segment_t* ParseSubtitles( int *pi_align, const char *psz_subtitle )
                     // This is an unknown tag. We need to hide it if it's properly closed, and display it otherwise
                     if ( !IsClosed( psz_subtitle, psz_tagname ) )
                     {
-                        AppendCharacter( p_segment, '<' );
-                        AppendString( p_segment, psz_tagname );
-                        AppendCharacter( p_segment, '>' );
+                        AppendCharacter( &text, p_segment, '<' );
+                        AppendString( &text, p_segment, psz_tagname );
+                        AppendCharacter( &text, p_segment, '>' );
                     }
                     else
                     {
@@ -914,9 +945,9 @@ static text_segment_t* ParseSubtitles( int *pi_align, const char *psz_subtitle )
                         // Unknown closing tag. If it is closing an unknown tag, ignore it. Otherwise, display it
                         if ( !HasTag( &p_tag_stack, psz_closetagname ) )
                         {
-                            AppendString( p_segment, "</" );
-                            AppendString( p_segment, psz_closetagname );
-                            AppendCharacter( p_segment, '>' );
+                            AppendString( &text, p_segment, "</" );
+                            AppendString( &text, p_segment, psz_closetagname );
+                            AppendCharacter( &text, p_segment, '>' );
                         }
                     }
                     while ( *psz_subtitle == ' ' )
@@ -931,7 +962,7 @@ static text_segment_t* ParseSubtitles( int *pi_align, const char *psz_subtitle )
                       * This doesn't appear to be a valid tag closing syntax.
                       * Simply append the text
                       */
-                    AppendString( p_segment, "</" );
+                    AppendString( &text, p_segment, "</" );
                     psz_subtitle += 2;
                 }
             }
@@ -941,7 +972,7 @@ static text_segment_t* ParseSubtitles( int *pi_align, const char *psz_subtitle )
                  * The rest of the string won't be recognized as a tag, and
                  * we will ignore unknown closing tag
                  */
-                AppendCharacter( p_segment, '<' );
+                AppendCharacter( &text, p_segment, '<' );
                 psz_subtitle++;
             }
         }
@@ -1048,7 +1079,7 @@ static text_segment_t* ParseSubtitles( int *pi_align, const char *psz_subtitle )
         {
             if( *psz_subtitle == '\n' || !strncasecmp( psz_subtitle, "\\n", 2 ) )
             {
-                if ( !AppendCharacter( p_segment, '\n' ) )
+                if ( !AppendCharacter( &text, p_segment, '\n' ) )
                     goto fail;
                 if ( *psz_subtitle == '\n' )
                     psz_subtitle++;
@@ -1057,15 +1088,17 @@ static text_segment_t* ParseSubtitles( int *pi_align, const char *psz_subtitle )
             }
             else if( !strncasecmp( psz_subtitle, "\\h", 2 ) )
             {
-                if ( !AppendString( p_segment, "\xC2\xA0" ) )
+                if ( !AppendString( &text, p_segment, "\xC2\xA0" ) )
                     goto fail;
                 psz_subtitle += 2;
             }
             else
             {
-                //FIXME: Highly inneficient
-                AppendCharacter( p_segment, *psz_subtitle );
-                psz_subtitle++;
+                /* append the characters up to the next markup at once */
+                size_t i_len = strcspn( psz_subtitle + 1, "<{\n\\" ) + 1;
+                if ( !AppendStringN( &text, p_segment, psz_subtitle, i_len ) )
+                    goto fail;
+                psz_subtitle += i_len;
             }
         }
     }

@@ -967,7 +967,7 @@ void AddonItemDelegate::paint( QPainter *painter,
     int i_downloads = index.data( AddonsModel::DOWNLOAD_COUNT).toInt();
     if ( i_downloads )
         painter->drawText( textrect.translated( scoreicon.width() + margins.left(), 0 ),
-                           Qt::AlignLeft, qtr("%1 downloads").arg( i_downloads ) );
+                           Qt::AlignLeft, qtr("%1 download", "%1 downloads", i_downloads).arg( i_downloads ) );
 
     painter->restore();
 
@@ -1124,7 +1124,7 @@ ExtensionInfoDialog::ExtensionInfoDialog( const QModelIndex &index,
     setWindowModality( Qt::WindowModal );
 
     // Window title
-    setWindowTitle( qtr( "About" ) + " " + index.data(Qt::DisplayRole).toString() );
+    setWindowTitle( qtr( "About %1" ).arg( index.data(Qt::DisplayRole).toString() ) );
 
     // Layout
     QGridLayout *layout = new QGridLayout( this );
@@ -1147,13 +1147,13 @@ ExtensionInfoDialog::ExtensionInfoDialog( const QModelIndex &index,
     layout->addWidget( label, 0, 0, 1, -1 );
 
     // Version
-    label = new QLabel( "<b>" + qtr( "Version" ) + ":</b>", this );
+    label = new QLabel( "<b>" + qtr( "Version:" ) + "</b>", this );
     layout->addWidget( label, 1, 1, 1, 1, Qt::AlignBottom );
     label = new QLabel( index.data(ExtensionListModel::VersionRole).toString(), this );
     layout->addWidget( label, 1, 2, 1, 2, Qt::AlignBottom );
 
     // Author
-    label = new QLabel( "<b>" + qtr( "Author" ) + ":</b>", this );
+    label = new QLabel( "<b>" + qtr( "Author:" ) + "</b>", this );
     layout->addWidget( label, 2, 1, 1, 1, Qt::AlignTop );
     label = new QLabel( index.data(ExtensionListModel::AuthorRole).toString(), this );
     layout->addWidget( label, 2, 2, 1, 2, Qt::AlignTop );
@@ -1167,7 +1167,7 @@ ExtensionInfoDialog::ExtensionInfoDialog( const QModelIndex &index,
     layout->addWidget( label, 4, 0, 1, -1 );
 
     // URL
-    label = new QLabel( "<b>" + qtr( "Website" ) + ":</b>", this );
+    label = new QLabel( "<b>" + qtr( "Website:" ) + "</b>", this );
     layout->addWidget( label, 5, 0, 1, 2 );
     label = new QLabel( QString("<a href=\"%1\">%2</a>")
                         .arg( index.data(ExtensionListModel::LinkRole).toString() )
@@ -1177,7 +1177,7 @@ ExtensionInfoDialog::ExtensionInfoDialog( const QModelIndex &index,
     layout->addWidget( label, 5, 2, 1, -1 );
 
     // Script file
-    label = new QLabel( "<b>" + qtr( "File" ) + ":</b>", this );
+    label = new QLabel( "<b>" + qtr( "File:" ) + "</b>", this );
     layout->addWidget( label, 6, 0, 1, 2 );
     QLineEdit *line =
             new QLineEdit( index.data(ExtensionListModel::FilenameRole).toString(), this );
@@ -1207,7 +1207,7 @@ AddonInfoDialog::AddonInfoDialog( const QModelIndex &index,
     setWindowModality( Qt::WindowModal );
 
     // Window title
-    setWindowTitle( qtr( "About" ) + " " + index.data(AddonsModel::Role::NAME).toString() );
+    setWindowTitle( qtr( "About %1" ).arg( index.data(AddonsModel::Role::NAME).toString() ) );
 
     // Layout
     QGridLayout *layout = new QGridLayout( this );
@@ -1277,7 +1277,7 @@ AddonInfoDialog::AddonInfoDialog( const QModelIndex &index,
     QString sourceUrl = index.data(AddonsModel::Role::LINK).toString();
     if ( !sourceUrl.isEmpty() )
     {
-        label = new QLabel( "<b>" + qtr( "Website" ) + ":</b>", this );
+        label = new QLabel( "<b>" + qtr( "Website:" ) + "</b>", this );
         layout->addWidget( label, 5, 0, 1, 2 );
         label = new QLabel( QString("<a href=\"%1\">%2</a>")
                             .arg( sourceUrl ).arg( sourceUrl ), this );
@@ -1289,7 +1289,7 @@ AddonInfoDialog::AddonInfoDialog( const QModelIndex &index,
     QList<QVariant> list = index.data(AddonsModel::Role::FILENAME).toList();
     if ( ! list.empty() )
     {
-        label = new QLabel( "<b>" + qtr( "Files" ) + ":</b>", this );
+        label = new QLabel( "<b>" + qtr( "Files:" ) + "</b>", this );
         layout->addWidget( label, 6, 0, 1, 2 );
         QComboBox *filesCombo = new QComboBox();
         Q_FOREACH( const QVariant & file, list )

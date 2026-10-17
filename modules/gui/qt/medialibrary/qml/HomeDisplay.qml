@@ -75,7 +75,7 @@ Widgets.PageLoader {
         Widgets.PageExt {
             id: continueWatchingPage
 
-            title: qsTr("Continue Watching")
+            title: qsTr("Watch Next")
 
             VideoAll {
                 id: continueWatching

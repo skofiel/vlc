@@ -29,6 +29,8 @@
 #include <QPointer>
 #include <QScreen>
 
+#include <atomic>
+
 #include "qt.hpp"
 
 class MainCtx;
@@ -62,6 +64,9 @@ protected slots:
 private:
     qt_intf_t *m_intf = nullptr;
     QPointer<QWindow> m_window;
+    // states of m_window, as a Qt::WindowStates, readable from the vout
+    // threads (QWindow is not)
+    std::atomic<int> m_windowStates { 0 };
 
     bool m_videoFullScreen = false;
     bool m_autoresize = false;

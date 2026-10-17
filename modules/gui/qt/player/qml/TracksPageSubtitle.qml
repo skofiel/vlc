@@ -38,7 +38,7 @@ TracksPage {
     }
 
     function valueFromTextA(text, locale) {
-        return Number.fromLocaleString(locale, text.substring(0, text.length - 3))
+        return Helpers.numberFromFormattedText(text, qsTr("%1 ms"), locale)
     }
 
     function textFromValueB(value, locale) {
@@ -46,7 +46,7 @@ TracksPage {
     }
 
     function valueFromTextB(text, locale) {
-        return Number.fromLocaleString(locale, text.substring(0, text.length - 4)) * 10
+        return Helpers.numberFromFormattedText(text, qsTr("%1 fps"), locale) * 10
     }
 
     // Children

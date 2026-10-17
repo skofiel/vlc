@@ -23,6 +23,7 @@ import VLC.MainInterface
 import VLC.Widgets as Widgets
 import VLC.Style
 import VLC.Network
+import VLC.Util
 
 Widgets.PageExt {
     id: root
@@ -170,7 +171,7 @@ Widgets.PageExt {
 
                     Widgets.CaptionLabel {
                         text: qsTr("Score: %1/5  Downloads: %2")
-                            .arg( (5 * model.score / discoveryModel.maxScore).toFixed(1) )
+                            .arg(Helpers.formatNumber(5 * model.score / discoveryModel.maxScore, 1))
                             .arg(model.downloads)
                         topPadding: VLCStyle.margin_xsmall
                         color: servicesView.colorContext.fg.secondary

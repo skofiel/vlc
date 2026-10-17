@@ -252,14 +252,22 @@ FocusScope {
             id: videoComponent
 
             FocusScope {
+                id: videoFrame
+
                 // Video
 
                 focus: true
+
+                // With the pinned controls, the video is in a rounded frame
+                readonly property bool framed: rootPlayer._controlsUnderVideo
+                readonly property real frameMargin: framed ? VLCStyle.margin_xsmall : 0
+                readonly property real frameRadius: framed ? VLCStyle.radius_medium : 0
 
                 VideoSurface {
                     id: videoSurface
 
                     anchors.fill: parent
+                    anchors.margins: videoFrame.frameMargin
 
                     // With regard to `ViewBlockingRectangle`, we
                     // do not need to prevent painting anything
@@ -300,6 +308,33 @@ FocusScope {
                     TouchDragHandler {
 
                     }
+                }
+
+                // NOTE: The video is drawn under the interface, so the frame
+                //       is drawn over it: the margins, and a ring whose inner
+                //       edge rounds the corners of the video.
+                Rectangle {
+                    anchors.fill: parent
+
+                    visible: videoFrame.framed
+
+                    color: "transparent"
+                    border.width: videoFrame.frameMargin
+                    border.color: windowTheme.bg.primary
+                }
+
+                Rectangle {
+                    x: videoSurface.x - videoFrame.frameRadius
+                    y: videoSurface.y - videoFrame.frameRadius
+                    width: videoSurface.width + 2 * videoFrame.frameRadius
+                    height: videoSurface.height + 2 * videoFrame.frameRadius
+
+                    visible: videoFrame.framed
+
+                    radius: 2 * videoFrame.frameRadius
+                    color: "transparent"
+                    border.width: videoFrame.frameRadius
+                    border.color: windowTheme.bg.primary
                 }
 
                 component FadeRectangle : Rectangle {
@@ -957,6 +992,7 @@ FocusScope {
         title: Player.title
 
         pinControls: MainCtx.pinVideoControls
+        resumeVisible: resumeDialog.visible
 
         showCSD: MainCtx.clientSideDecoration && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
         showToolbar: MainCtx.hasToolbarMenu && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
@@ -1279,6 +1315,30 @@ FocusScope {
         }
     }
 
+    ResumeDialog {
+        id: resumeDialog
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: controlBar.top
+        anchors.bottomMargin: VLCStyle.margin_large
+
+        width: Math.min(implicitWidth, parent.width - 2 * VLCStyle.margin_large)
+
+        z: 1
+
+        colorContext.palette: windowTheme.palette
+
+        Navigation.parentItem: rootPlayer
+        Navigation.downItem: controlBar
+
+        onHidden: {
+            if (activeFocus)
+                controlBar.forceActiveFocus(Qt.OtherFocusReason)
+        }
+
+        onVisibleChanged: rootPlayer.lockUnlockAutoHide(visible)
+    }
+
     ControlBar {
         id: controlBar
 
@@ -1297,7 +1357,7 @@ FocusScope {
         bottomPadding: VLCStyle.applicationVerticalMargin + VLCStyle.margin_xsmall
 
         textPosition: (MainCtx.pinVideoControls)
-                      ? ControlBar.TimeTextPosition.LeftRightSlider
+                      ? ControlBar.TimeTextPosition.Inline
                       : ControlBar.TimeTextPosition.AboveSlider
 
         // hide right text so that it won't overlap with play queue

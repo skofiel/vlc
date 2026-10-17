@@ -164,6 +164,8 @@ libqt_plugin_la_SOURCES = \
 	dialogs/toolbar/controlbar_profile.cpp \
 	dialogs/toolbar/controlbar_profile_model.cpp \
 	dialogs/toolbar/controlbar_profile_model.hpp \
+	dialogs/settings/settingsmodel.cpp \
+	dialogs/settings/settingsmodel.hpp \
 	dialogs/vlm/vlm.cpp dialogs/vlm/vlm.hpp \
 	dialogs/playlists/playlists.cpp dialogs/playlists/playlists.hpp \
 	maininterface/compositor.hpp \
@@ -443,6 +445,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	dialogs/systray/systray.moc.cpp \
 	dialogs/toolbar/controlbar_profile.moc.cpp \
 	dialogs/toolbar/controlbar_profile_model.moc.cpp \
+	dialogs/settings/settingsmodel.moc.cpp \
 	dialogs/playlists/playlists.moc.cpp \
 	maininterface/compositor.moc.cpp \
 	maininterface/compositor_common.moc.cpp \
@@ -1044,6 +1047,7 @@ libqml_module_dialogs_a_QML = \
 	dialogs/dialogs/qml/Dialogs.qml \
 	dialogs/dialogs/qml/ModalDialog.qml \
 	dialogs/dialogs/qml/WindowDialog.qml \
+	dialogs/settings/qml/SettingsDialog.qml \
 	dialogs/toolbar/qml/EditorDNDDelegate.qml \
 	dialogs/toolbar/qml/EditorDNDView.qml\
 	dialogs/toolbar/qml/EditorDummyButton.qml \
@@ -1113,6 +1117,8 @@ libqml_module_medialibrary_a_QML = \
 	medialibrary/qml/PlaylistMediaList.qml \
 	medialibrary/qml/PlaylistMedia.qml \
 	medialibrary/qml/PlaylistMediaDisplay.qml \
+	medialibrary/qml/PlaylistsDisplay.qml \
+	medialibrary/qml/RecentsDisplay.qml \
 	medialibrary/qml/VideoPlaylistsDisplay.qml \
 	medialibrary/qml/VideoGridItem.qml \
 	medialibrary/qml/VideoInfoExpandPanel.qml \
@@ -1154,7 +1160,6 @@ libqml_module_network_a_QML = \
 	network/qml/BrowseHomeDisplay.qml \
 	network/qml/BrowseTreeDisplay.qml \
 	network/qml/BrowseTreeHeader.qml \
-	network/qml/DiscoverDisplay.qml \
 	network/qml/DiscoverUrlDisplay.qml \
 	network/qml/NetworkAddressbar.qml \
 	network/qml/NetworkGridItem.qml \
@@ -1223,6 +1228,10 @@ libqml_module_playercontrols_a_QML = \
 	player/qml/controlbarcontrols/FullscreenButton.qml \
 	player/qml/controlbarcontrols/InfoButton.qml \
 	player/qml/controlbarcontrols/LangButton.qml \
+	player/qml/controlbarcontrols/AudioTracksButton.qml \
+	player/qml/controlbarcontrols/SubtitleTracksButton.qml \
+	player/qml/controlbarcontrols/PlayerSettingsButton.qml \
+	player/qml/controlbarcontrols/TracksMenuButton.qml \
 	player/qml/controlbarcontrols/LoopButton.qml \
 	player/qml/controlbarcontrols/MenuButton.qml \
 	player/qml/controlbarcontrols/NavigationBoxButton.qml \
@@ -1312,6 +1321,8 @@ libqml_module_widgets_a_QML = \
 	widgets/qml/ActionButtonPrimary.qml \
 	widgets/qml/BannerTabButton.qml \
 	widgets/qml/BannerCone.qml \
+	widgets/qml/Breadcrumbs.qml \
+	widgets/qml/CategoryListPage.qml \
 	widgets/qml/BusyIndicatorExt.qml \
 	widgets/qml/CaptionLabel.qml \
 	widgets/qml/CheckButton.qml \
@@ -1360,6 +1371,7 @@ libqml_module_widgets_a_QML = \
 	widgets/qml/ScaledImage.qml \
 	widgets/qml/TextAutoScroller.qml \
 	widgets/qml/SearchBox.qml \
+	widgets/qml/SegmentedChoice.qml \
 	widgets/qml/SliderExt.qml \
 	widgets/qml/SortControl.qml \
 	widgets/qml/SplitButton.qml \

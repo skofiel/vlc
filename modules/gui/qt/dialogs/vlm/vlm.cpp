@@ -503,7 +503,7 @@ VLMBroadcast::VLMBroadcast( VLMWrapper *vlm, const QString& _name,
                                         _output, _enabled, _parent,
                                         QVLM_Broadcast )
 {
-    nameLabel->setText( qtr("Broadcast: ") + name );
+    nameLabel->setText( qtr("Broadcast: %1").arg( name ) );
     type = QVLM_Broadcast;
     b_looped = _looped;
 
@@ -576,7 +576,7 @@ VLMSchedule::VLMSchedule( VLMWrapper *vlm, const QString& name_,
             : VLMAWidget( vlm, name_, input, inputOptions, output, enabled,
                           parent, QVLM_Schedule )
 {
-    nameLabel->setText( qtr("Schedule: ") + name );
+    nameLabel->setText( qtr("Schedule: %1").arg( name ) );
     schetime = _schetime;
     schedate = _schedate;
     rNumber = _scherepeatnumber;

@@ -146,6 +146,75 @@ QtObject {
         return getFlickableBoundedContentY(flickable, newContentY)
     }
 
+    // name of the segment at index of a path of the history (e.g. "Videos"
+    // for ["video"]), or "" when it is not shown (default sub-pages, and
+    // pages that are named by their title)
+    function pageName(path : var, index : int) : string {
+        const segment = path[index]
+
+        if (index === 0) {
+            switch (segment) {
+            case "home": return qsTr("Home")
+            case "video": return qsTr("Videos")
+            case "music": return qsTr("Music")
+            case "network": return qsTr("Network")
+            case "playlists": return qsTr("Playlists")
+            case "recent": return qsTr("Recent")
+            }
+        } else if (index === 1) {
+            switch (path[0] + "/" + segment) {
+            case "video/playlists": return qsTr("Playlists")
+            case "music/artists": return qsTr("Artists")
+            case "music/albums": return qsTr("Albums")
+            case "music/tracks": return qsTr("Songs")
+            case "music/genres": return qsTr("Genres")
+            case "music/playlists": return qsTr("Playlists")
+            case "network/services": return qsTr("Services")
+            case "network/url": return qsTr("URL")
+            }
+        }
+        return ""
+    }
+
+    // formats a number in the language of the interface, with at most
+    // `decimals` decimals (without the trailing zeros)
+    function formatNumber(value : real, decimals : int) : string {
+        const locale = Qt.locale()
+        let text = Number(value).toLocaleString(locale, 'f', decimals)
+        if (decimals > 0 && text.indexOf(locale.decimalPoint) !== -1) {
+            let end = text.length
+            while (end > 0 && text[end - 1] === locale.zeroDigit)
+                --end
+            if (text.substr(end - locale.decimalPoint.length, locale.decimalPoint.length) === locale.decimalPoint)
+                end -= locale.decimalPoint.length
+            text = text.substring(0, end)
+        }
+        return text
+    }
+
+    // reads the number of a text formatted with a translated format (e.g.
+    // "%1 ms" translated): the prefix and the suffix are those of the translation
+    function numberFromFormattedText(text : string, format : string, locale : var) : real {
+        const affixes = format.split("%1")
+        let number = text.trim()
+        const prefix = (affixes[0] ?? "").trim()
+        const suffix = (affixes[1] ?? "").trim()
+        if (prefix.length > 0 && number.startsWith(prefix))
+            number = number.substring(prefix.length)
+        if (suffix.length > 0 && number.endsWith(suffix))
+            number = number.substring(0, number.length - suffix.length)
+        try {
+            return Number.fromLocaleString(locale, number.trim())
+        } catch (e) {
+            return NaN
+        }
+    }
+
+    // escapes a text to insert in a Text.StyledText
+    function escapeStyledText(text : string) : string {
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    }
+
     function isArray(obj : var) : bool {
         return (obj?.length !== undefined) ?? false
     }

@@ -31,7 +31,10 @@ Widgets.IconToolButton {
 
     color: "#FFFF0000" //red means recording
     text: VLCIcons.record
-    description: qsTr("record")
+    description: Player.recording ? qsTr("Stop recording") : qsTr("Record")
+
+    Accessible.checkable: true
+    Accessible.checked: Player.recording
 
     AccessibleCompat.id: "recordButton"
 
@@ -45,7 +48,7 @@ Widgets.IconToolButton {
 
         SequentialAnimation on color {
             loops: Animation.Infinite
-            running: control.enabled && Player.recording
+            running: control.enabled && Player.recording && !VLCStyle.reduceMotion
 
             ColorAnimation  {
                 from:  "#FFFF0000"

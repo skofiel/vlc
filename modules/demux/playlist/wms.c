@@ -73,8 +73,8 @@ int Import_WMS(vlc_object_t *obj)
     stream_t *demux = (stream_t *)obj;
     const uint8_t *peek;
 
-    if (vlc_stream_Peek(demux->s, &peek, 10) < 10
-     || strncmp((const char *)peek, "[Reference]", 11))
+    if (vlc_stream_Peek(demux->s, &peek, 11) < 11
+     || memcmp(peek, "[Reference]", 11))
         return VLC_EGENERIC;
 
     msg_Dbg(demux, "found WMS metafile");

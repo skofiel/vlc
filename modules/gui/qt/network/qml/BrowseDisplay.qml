@@ -38,8 +38,11 @@ Widgets.PageLoader {
     // Settings
 
     pageModel: [{
-        name: "home",
+        name: "index",
         default: true,
+        component: indexComponent
+    }, {
+        name: "home",
         component: browseHome
     }, {
         name: "folders",
@@ -51,10 +54,34 @@ Widgets.PageLoader {
         name: "browse",
         component: browseComponent,
         guard: function (prop) { return !!prop.tree }
+    }, {
+        name: "services",
+        url: "qrc:///qt/qml/VLC/Network/ServicesHomeDisplay.qml"
+    }, {
+        name: "url",
+        url: "qrc:///qt/qml/VLC/Network/DiscoverUrlDisplay.qml"
     }]
 
     Accessible.role: Accessible.Client
     Accessible.name: qsTr("Browse view")
+
+    // the discovery pages are loaded from their url, they are not bound in a component
+    onCurrentItemChanged: {
+        if (!currentItem)
+            return
+
+        if (currentItem.displayMarginBeginning !== undefined)
+            currentItem.displayMarginBeginning = Qt.binding(() => { return root.displayMarginBeginning })
+
+        if (currentItem.displayMarginEnd !== undefined)
+            currentItem.displayMarginEnd = Qt.binding(() => { return root.displayMarginEnd })
+
+        if (currentItem.enableBeginningFade !== undefined)
+            currentItem.enableBeginningFade = Qt.binding(() => { return root.enableBeginningFade })
+
+        if (currentItem.enableEndFade !== undefined)
+            currentItem.enableEndFade = Qt.binding(() => { return root.enableEndFade })
+    }
 
     //functions
 
@@ -76,6 +103,51 @@ Widgets.PageLoader {
     }
 
     // Children
+
+    // index of the network view: network streams, local network and services
+    Component {
+        id: indexComponent
+
+        Widgets.CategoryListPage {
+            title: qsTr("Network")
+
+            categories: {
+                const categories = [
+                    { icon: VLCIcons.add, text: qsTr("Add Network Stream"), path: [...root.pagePrefix, "url"] },
+                    { icon: VLCIcons.topbar_network, text: qsTr("Browse"), path: [...root.pagePrefix, "home"] }
+                ]
+
+                for (let i = 0; i < sourcesModel.count; ++i) {
+                    const source = sourcesModel.getDataAt(i)
+
+                    // the "Add a service" entry goes last
+                    if (source.type !== NetworkSourcesModel.TYPE_DUMMY) {
+                        categories.push({ icon: VLCIcons.stream, text: source.long_name,
+                                          path: [...root.pagePrefix, "services", "source_root"],
+                                          properties: { source_name: source.name } })
+                    }
+                }
+
+                categories.push({ icon: VLCIcons.add, text: qsTr("Add a service"),
+                                  path: [...root.pagePrefix, "services", "services_manage"] })
+                return categories
+            }
+
+            onActivated: (category, reason) => {
+                if (category.properties)
+                    History.push(category.path, category.properties, reason)
+                else
+                    History.push(category.path, reason)
+            }
+
+            NetworkSourcesModel {
+                id: sourcesModel
+
+                ctx: MainCtx
+            }
+        }
+    }
+
     Component {
         id: browseHome
 

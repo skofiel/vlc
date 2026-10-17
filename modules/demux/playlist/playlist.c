@@ -179,7 +179,6 @@ char *ProcessMRL(const char *str, const char *base)
         str = rel;
 
     char *abs = vlc_uri_resolve(base, str);
-    free(rel);
 
     if (abs == NULL)
     {
@@ -195,9 +194,13 @@ char *ProcessMRL(const char *str, const char *base)
         if (scheme_end &&
             strspn (orig, valid_chars) == (size_t)(scheme_end - orig))
         {
-            abs = strdup (orig);
+            /* at least do not pass on characters that are not allowed in an
+             * URI (e.g. spaces or control characters) */
+            abs = rel != NULL ? rel : strdup (orig);
+            rel = NULL;
         }
     }
+    free(rel);
 
     return abs;
 }

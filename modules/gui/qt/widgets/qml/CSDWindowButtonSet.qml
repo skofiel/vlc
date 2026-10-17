@@ -81,6 +81,10 @@ Row {
                     return (MainCtx.intfMainWindow.visibility === Window.Maximized)
                             ? qsTr("Restore")
                             : qsTr("Maximize")
+                case CSDButton.Fullscreen:
+                    return (MainCtx.intfMainWindow.visibility === Window.FullScreen)
+                            ? qsTr("Exit fullscreen")
+                            : qsTr("Fullscreen")
                 case CSDButton.Close:
                     return qsTr("Close")
                 }
@@ -109,6 +113,19 @@ Row {
                         return (MainCtx.intfMainWindow.visibility === Window.Maximized)
                                 ? VLCIcons.window_restore
                                 : VLCIcons.window_maximize
+                }
+
+                case CSDButton.Fullscreen:
+                {
+                    if (useWinIcons)
+                        return (MainCtx.intfMainWindow.visibility === Window.FullScreen)
+                                ? "\uE73F"
+                                : "\uE740"
+
+                    else
+                        return (MainCtx.intfMainWindow.visibility === Window.FullScreen)
+                                ? VLCIcons.defullscreen
+                                : VLCIcons.fullscreen
                 }
 
                 case CSDButton.Close:

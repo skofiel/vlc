@@ -36,9 +36,14 @@ vlc_playlist_PlaybackOrderChanged(vlc_playlist_t *playlist)
     {
         /* randomizer is expected to be empty at this point */
         assert(randomizer_Count(&playlist->randomizer) == 0);
-        if (playlist->items.size)
-            randomizer_Add(&playlist->randomizer, playlist->items.data,
-                           playlist->items.size);
+        if (playlist->items.size &&
+            !randomizer_Add(&playlist->randomizer, playlist->items.data,
+                            playlist->items.size))
+        {
+            /* the items must all be in the randomizer: stay in order */
+            playlist->order = VLC_PLAYLIST_PLAYBACK_ORDER_NORMAL;
+            randomizer_Clear(&playlist->randomizer);
+        }
 
         bool loop = playlist->repeat == VLC_PLAYLIST_PLAYBACK_REPEAT_ALL;
         randomizer_SetLoop(&playlist->randomizer, loop);

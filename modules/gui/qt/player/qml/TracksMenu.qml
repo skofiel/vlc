@@ -26,7 +26,6 @@ import VLC.Style
 import VLC.Widgets as Widgets
 import VLC.Util
 
-// FIXME: Keyboard navigation needs to be fixed for this Popup.
 T.Popup {
     id: root
 
@@ -37,7 +36,25 @@ T.Popup {
                           ? preferredWidth : Number.MAX_VALUE
                     , root.parent.width)
 
-    height: VLCStyle.dp(296, VLCStyle.scale)
+    height: VLCStyle.dp(320, VLCStyle.scale)
+
+    // Functions
+
+    // opens the menu on a tab of the first page: 0 playback, 1 video, 2 audio,
+    // 3 subtitles
+    function openTab(index) {
+        stackView.pop(null, T.StackView.Immediate)
+        const page = stackView.get(0)
+        if (page)
+            page.currentIndex = index
+        open()
+    }
+
+    // Events
+
+    // NOTE: Give the menu a keyboard focus even when it was opened with the mouse, otherwise
+    //       the keys are taken as hotkeys by the interface and never reach the menu.
+    onOpened: Helpers.enforceFocus(stackView, Qt.TabFocusReason)
 
     // Animations
 
@@ -56,8 +73,8 @@ T.Popup {
     }
 
     background: Rectangle {
-        // NOTE: The opacity should be stronger on a light background for readability.
-        color: popupTheme.bg.primary.alpha(popupTheme.palette.isDark ? 0.8 : 0.96)
+        // NOTE: nearly opaque so that the video does not hurt readability
+        color: popupTheme.bg.primary.alpha(0.96)
 
         Rectangle {
             anchors.left: parent.left
@@ -124,9 +141,14 @@ T.Popup {
       signal requestSubtitlePage()
       signal requestPlaybackSpeedPage()
       signal requestBack()
+      signal requestClose()
 
       onRequestBack: {
           stackView.pop()
+      }
+
+      onRequestClose: {
+          root.close()
       }
 
       onRequestAudioPage: {

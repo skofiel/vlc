@@ -50,9 +50,18 @@ void VideoWindowHandler::setWindow(QWindow* window)
     {
         WindowStateHolder::holdOnTop(m_window, WindowStateHolder::VIDEO, false);
         WindowStateHolder::holdFullscreen(m_window, WindowStateHolder::VIDEO, false);
+        disconnect(m_window, nullptr, this, nullptr);
     }
 
     m_window = window;
+
+    if (m_window)
+    {
+        m_windowStates = m_window->windowStates().toInt();
+        connect(m_window, &QWindow::windowStateChanged, this, [this]() {
+            m_windowStates = m_window->windowStates().toInt();
+        });
+    }
 }
 
 void VideoWindowHandler::disable()
@@ -63,9 +72,9 @@ void VideoWindowHandler::disable()
 
 void VideoWindowHandler::requestResizeVideo( unsigned i_width, unsigned i_height )
 {
-    if (!m_window)
-        return;
-    emit askVideoToResize( i_width, i_height, m_window->windowStates() );
+    // called from a vout thread: m_window is only read by the queued slot
+    emit askVideoToResize( i_width, i_height,
+                           Qt::WindowStates::fromInt( m_windowStates.load() ) );
 }
 
 void VideoWindowHandler::requestVideoWindowed( )

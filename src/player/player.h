@@ -272,6 +272,8 @@ struct vlc_player_t
     struct vlc_list vout_listeners;
 
     input_resource_t *resource;
+    /* held audio output on which the player callbacks are registered */
+    audio_output_t *callbacks_aout;
     vlc_renderer_item_t *renderer;
 
     input_item_t *media;
@@ -596,6 +598,9 @@ vlc_player_osd_Program(vlc_player_t *player, const char *name);
 
 void
 vlc_player_input_RestoreMlStates(struct vlc_player_input* input, bool force_pos);
+
+void
+vlc_player_input_ReleaseMlStates(struct vlc_player_input* input);
 
 void
 vlc_player_UpdateMLStates(vlc_player_t *player, struct vlc_player_input* input);

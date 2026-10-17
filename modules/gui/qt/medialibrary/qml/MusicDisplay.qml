@@ -34,9 +34,12 @@ Widgets.PageLoader {
     AccessibleCompat.id: "musicDisplay"
 
     pageModel: [{
+            name: "base",
+            default: true,
+            component: categoriesComponent
+        }, {
             displayText: qsTr("Artists"),
             name: "artists",
-            default: true,
             url: "qrc:///qt/qml/VLC/MediaLibrary/MusicArtistsDisplay.qml"
         }, {
             displayText: qsTr("Albums"),
@@ -76,6 +79,26 @@ Widgets.PageLoader {
 
             if (currentItem.enableEndFade !== undefined)
                 currentItem.enableEndFade = Qt.binding(() => { return root.enableEndFade })
+        }
+    }
+
+    // index of the music library, the sub-pages are not in the sidebar
+    Component {
+        id: categoriesComponent
+
+        Widgets.CategoryListPage {
+            title: qsTr("Music")
+
+            categories: [
+                // folders are added to the library from the network view
+                { icon: VLCIcons.add, text: qsTr("Add"), path: ["network", "home"] },
+                { icon: VLCIcons.topbar_music, text: qsTr("Songs"), path: [...root.pagePrefix, "tracks"] },
+                { icon: VLCIcons.album_cover, text: qsTr("Albums"), path: [...root.pagePrefix, "albums"] },
+                { icon: VLCIcons.profile_new, text: qsTr("Artists"), path: [...root.pagePrefix, "artists"] },
+                { icon: VLCIcons.list, text: qsTr("Genres"), path: [...root.pagePrefix, "genres"] }
+            ]
+
+            onActivated: (category, reason) => History.push(category.path, reason)
         }
     }
 

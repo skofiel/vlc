@@ -201,7 +201,8 @@ FocusScope {
 
                 Widgets.MenuCaption {
                     topPadding: VLCStyle.margin_normal
-                    text: "<b>" + qsTr("File Name:") + "</b> " + root.model.fileName
+                    text: "<b>%1</b> %2".arg(qsTr("File Name:"))
+                                        .arg(Helpers.escapeStyledText(root.model?.fileName ?? ""))
                     width: parent.width
                     color: theme.fg.secondary
                     textFormat: Text.StyledText
@@ -216,9 +217,10 @@ FocusScope {
                             return "<b>%1</b> <a href='%2'>%3</a>"
                                         .arg(qsTr("Folder:"))
                                         .arg(folderMRL)
-                                        .arg(MainCtx.displayMRL(folderMRL))
+                                        .arg(Helpers.escapeStyledText(MainCtx.displayMRL(folderMRL)))
 
-                        return "<b>" + qsTr("Path:") + "</b> " + root.model.display_mrl
+                        return "<b>%1</b> %2".arg(qsTr("Path:"))
+                                             .arg(Helpers.escapeStyledText(root.model?.display_mrl ?? ""))
                     }
 
                     linkColor: theme.fg.link

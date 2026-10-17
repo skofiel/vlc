@@ -76,6 +76,9 @@
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
 #include <QStyleHints>
+#include <QApplication>
+#include <QPalette>
+#include <QStyle>
 #endif
 
 #ifdef _WIN32
@@ -129,6 +132,82 @@ bool loadVLCOption<bool>(vlc_object_t *obj, const char *name)
     return var_InheritBool(obj, name);
 }
 
+template <>
+QString loadVLCOption<QString>(vlc_object_t *obj, const char *name)
+{
+    char *value = var_InheritString(obj, name);
+    QString ret = qfu(value);
+    free(value);
+    return ret;
+}
+
+}
+
+// The widgets (menus, dialogs) follow the color scheme of the interface: with
+// a dark scheme, they use a dark palette, close to the one of the interface.
+static void applyWidgetsPalette(const ColorSchemeModel* colorScheme, const QString& accentColor)
+{
+    const QPalette standard = QApplication::style()->standardPalette();
+
+    bool dark;
+    switch (colorScheme->currentScheme())
+    {
+    case ColorSchemeModel::ColorScheme::Day:
+        dark = false;
+        break;
+    case ColorSchemeModel::ColorScheme::Night:
+        dark = true;
+        break;
+    case ColorSchemeModel::ColorScheme::System:
+    default:
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+        dark = (qGuiApp->styleHints()->colorScheme() == Qt::ColorScheme::Dark);
+#else
+        dark = (standard.color(QPalette::Window).lightness() < 128);
+#endif
+        break;
+    }
+
+    if (!dark)
+    {
+        QApplication::setPalette(standard);
+        return;
+    }
+
+    QColor accent(accentColor);
+    if (!accent.isValid())
+        accent = QColor(0xFF, 0x88, 0x00);
+
+    const QColor text(0xED, 0xED, 0xED);
+    const QColor secondaryText(0x9A, 0x9A, 0x9A);
+
+    QPalette palette;
+    palette.setColor(QPalette::Window, QColor(0x1E, 0x1E, 0x1E));
+    palette.setColor(QPalette::WindowText, text);
+    palette.setColor(QPalette::Base, QColor(0x12, 0x12, 0x12));
+    palette.setColor(QPalette::AlternateBase, QColor(0x26, 0x26, 0x26));
+    palette.setColor(QPalette::Text, text);
+    palette.setColor(QPalette::PlaceholderText, secondaryText);
+    palette.setColor(QPalette::Button, QColor(0x26, 0x26, 0x26));
+    palette.setColor(QPalette::ButtonText, text);
+    palette.setColor(QPalette::BrightText, Qt::white);
+    palette.setColor(QPalette::ToolTipBase, QColor(0x26, 0x26, 0x26));
+    palette.setColor(QPalette::ToolTipText, text);
+    palette.setColor(QPalette::Light, QColor(0x3A, 0x3A, 0x3A));
+    palette.setColor(QPalette::Midlight, QColor(0x2C, 0x2C, 0x2C));
+    palette.setColor(QPalette::Mid, QColor(0x2C, 0x2C, 0x2C));
+    palette.setColor(QPalette::Dark, QColor(0x12, 0x12, 0x12));
+    palette.setColor(QPalette::Shadow, Qt::black);
+    palette.setColor(QPalette::Highlight, accent);
+    palette.setColor(QPalette::HighlightedText,
+                     (accent.lightnessF() > 0.5) ? QColor(0x12, 0x12, 0x12) : Qt::white);
+    palette.setColor(QPalette::Link, accent);
+    palette.setColor(QPalette::LinkVisited, accent.darker(120));
+
+    for (const auto role : { QPalette::WindowText, QPalette::Text, QPalette::ButtonText })
+        palette.setColor(QPalette::Disabled, role, QColor(0x6A, 0x6A, 0x6A));
+
+    QApplication::setPalette(palette);
 }
 
 MainCtx::MainCtx(qt_intf_t *_p_intf)
@@ -447,6 +526,8 @@ void MainCtx::loadPrefs(const bool callSignals)
 
     loadFromVLCOption(m_smoothScroll, "qt-smooth-scrolling", &MainCtx::smoothScrollChanged);
 
+    loadFromVLCOption(m_reduceMotion, "qt-reduce-motion", &MainCtx::reduceMotionChanged);
+
     loadFromVLCOption(m_maxVolume, "qt-max-volume", &MainCtx::maxVolumeChanged);
 
     loadFromVLCOption(m_pinVideoControls, "qt-pin-controls", &MainCtx::pinVideoControlsChanged);
@@ -456,6 +537,8 @@ void MainCtx::loadPrefs(const bool callSignals)
     loadFromVLCOption(m_safeArea, "qt-safe-area", &MainCtx::safeAreaChanged);
 
     loadFromVLCOption(m_mouseHideTimeout, "mouse-hide-timeout", &MainCtx::mouseHideTimeoutChanged);
+
+    loadFromVLCOption(m_accentColor, "qt-accent-color", &MainCtx::accentColorChanged);
 }
 
 void MainCtx::loadFromSettingsImpl(const bool callSignals)
@@ -498,6 +581,14 @@ void MainCtx::loadFromSettingsImpl(const bool callSignals)
     const auto colorSchemeIndex = getSettings()->value( "MainWindow/color-scheme-index",
                                                         static_cast<int>(ColorSchemeModel::Night) ).toInt();
     m_colorScheme->setCurrentIndex(colorSchemeIndex);
+
+    applyWidgetsPalette(m_colorScheme, m_accentColor);
+    connect(m_colorScheme, &ColorSchemeModel::currentChanged, this, [this]() {
+        applyWidgetsPalette(m_colorScheme, m_accentColor);
+    });
+    connect(this, &MainCtx::accentColorChanged, this, [this]() {
+        applyWidgetsPalette(m_colorScheme, m_accentColor);
+    });
 
     /* user interface scale factor */
     auto userIntfScaleFactor = var_InheritFloat(p_intf, "qt-interface-scale");
@@ -616,6 +707,29 @@ void MainCtx::setHasToolbarMenu( bool hasToolbarMenu )
     config_PutInt("qt-menubar", (int) hasToolbarMenu);
 
     emit hasToolbarMenuChanged();
+}
+
+QStringList MainCtx::accentColorPresets()
+{
+    // orange, red, mustard, green, teal, blue, purple, magenta, grey
+    return {
+        QStringLiteral("#FF8800"), QStringLiteral("#E5413B"), QStringLiteral("#C9A227"),
+        QStringLiteral("#2EA043"), QStringLiteral("#1FA2B4"), QStringLiteral("#2F6FED"),
+        QStringLiteral("#8E44EC"), QStringLiteral("#D63AAF"), QStringLiteral("#9E9E9E"),
+    };
+}
+
+void MainCtx::setAccentColor(const QString &accentColor)
+{
+    if (m_accentColor == accentColor)
+        return;
+
+    m_accentColor = accentColor;
+
+    config_PutPsz("qt-accent-color", qtu(accentColor));
+    config_SaveConfigFile(p_intf);
+
+    emit accentColorChanged();
 }
 
 void MainCtx::setPinVideoControls(bool pinVideoControls)

@@ -31,7 +31,10 @@ import VLC.Util
 T.Control {
     id: delegate
 
+    Accessible.role: Accessible.ListItem
     Accessible.name: title
+    Accessible.selected: delegate.selected
+    Accessible.onPressAction: MainPlaylistController.goTo(delegate.mappedIndex(), true)
 
     // Properties
 
@@ -138,133 +141,57 @@ T.Control {
         enabled: theme.initialized
 
         border.color: delegate.visualFocus ? theme.visualFocus : Qt.alpha(theme.visualFocus, 0.0)
-
-        Widgets.CurrentIndicator {
-            anchors {
-                left: parent.left
-                leftMargin: VLCStyle.margin_xxsmall
-                verticalCenter: parent.verticalCenter
-            }
-
-            implicitHeight: parent.height * 3 / 4
-
-            color: {
-                if (delegate.isCurrent)
-                    return theme.accent
-
-                // based on design, ColorContext can't handle this case
-                if (!delegate.hovered)
-                    return theme.indicator.alpha(0)
-
-                return theme.indicator
-            }
-        }
     }
 
     contentItem: RowLayout {
         spacing: 0
 
-        property alias artworkTextureProvider: artwork.effectiveTextureProviderItem
-
+        // the current item has a play (or pause) mark, the others a drag handle
         Item {
-            id: artworkItem
+            id: statusItem
 
-            Layout.preferredHeight: VLCStyle.icon_playlistArt
-            Layout.preferredWidth: VLCStyle.icon_playlistArt
+            Layout.preferredHeight: VLCStyle.icon_normal
+            Layout.preferredWidth: VLCStyle.icon_normal
             Layout.alignment: Qt.AlignVCenter
 
             Accessible.role: Accessible.Graphic
-            Accessible.name: qsTr("Cover")
-            Accessible.description: {
+            Accessible.name: {
                 if (delegate.isCurrent) {
-                    if (Player.playingState === Player.PLAYING_STATE_PLAYING)
-                        return qsTr("Playing")
-                    else if (Player.playingState === Player.PLAYING_STATE_PAUSED)
+                    if (Player.playingState === Player.PLAYING_STATE_PAUSED)
                         return qsTr("Paused")
+                    return qsTr("Playing")
                 }
-                return qsTr("Media cover")
-            }
-
-            Widgets.ImageExt {
-                id: artwork
-
-                anchors.fill: parent
-                fillMode: Image.PreserveAspectFit
-                source: defaultSource
-                visible: !statusIcon.visible
-                asynchronous: true
-                opacity: (status === Image.Ready ? 1.0 : 0.0)
-                radius: VLCStyle.listAlbumCover_radius
-                backgroundColor: theme.bg.primary
-
-                sourceSize: Qt.size(width * eDPR, height * eDPR)
-
-                // We do not want to update the DPR when it is updated, as that means reading
-                // the image from disk again. Wayland provides ceiled value initially, we keep
-                // using that and downsample using gpu in fractional scale case:
-                readonly property real eDPR: MainCtx.effectiveDevicePixelRatio(Window.window)
-
-                Behavior on opacity {
-                    // WARNING: OpacityAnimator is not used because `visible` is not immediately respected in that case.
-                    NumberAnimation {
-                        duration: VLCStyle.duration_short
-                        easing.type: Easing.InSine
-                    }
-                }
-
-                readonly property url targetSource: (delegate?.artwork.toString()) ? VLCAccessImage.uri(delegate.artwork) : VLCStyle.noArtAlbumCover
-                readonly property url defaultSource: delegate.preparsed ? targetSource : ""
-
-                onStatusChanged: {
-                    if (source !== VLCStyle.noArtAlbumCover && status === Image.Error)
-                        source = VLCStyle.noArtAlbumCover
-                }
-
-                function resetSource() {
-                    artwork.source = Qt.binding(() => { return artwork.defaultSource })
-                    artworkTimer.running = Qt.binding(() => { return artworkTimer.defaultRunning })
-                }
-
-                function removeSource() {
-                    artworkTimer.running = false
-                    artwork.source = ""
-                }
-
-                Component.onCompleted: {
-                    delegate.ListView.reused.connect(artwork.resetSource)
-                    delegate.ListView.pooled.connect(artwork.removeSource)
-                }
-
-                Timer {
-                    id: artworkTimer
-                    running: defaultRunning
-                    readonly property bool defaultRunning: (artwork.status === Image.Null)
-                    interval: VLCStyle.duration_long
-                    onTriggered: {
-                        // Remove the preparse guard, enough time has passed:
-                        artwork.source = Qt.binding(() => { return artwork.targetSource; })
-                    }
-                }
-
-                Widgets.DefaultShadow {
-                    visible: (artwork.status === Image.Ready)
-                    z: -2
-                }
+                return qsTr("Drag to move")
             }
 
             Widgets.IconLabel {
-                id: statusIcon
-
                 anchors.centerIn: parent
-                visible: (delegate.isCurrent && text !== "")
+
+                visible: delegate.isCurrent
+
                 color: theme.accent
-                text: {
-                    if (Player.playingState === Player.PLAYING_STATE_PLAYING)
-                        return VLCIcons.volume_high
-                    else if (Player.playingState === Player.PLAYING_STATE_PAUSED)
-                        return VLCIcons.pause_filled
-                    else
-                        return ""
+                font.pixelSize: VLCStyle.icon_normal
+                text: (Player.playingState === Player.PLAYING_STATE_PAUSED) ? VLCIcons.pause_filled
+                                                                            : VLCIcons.play
+            }
+
+            Column {
+                anchors.centerIn: parent
+
+                visible: !delegate.isCurrent
+
+                spacing: VLCStyle.dp(4, VLCStyle.scale)
+
+                Repeater {
+                    model: 2
+
+                    Rectangle {
+                        width: VLCStyle.dp(14, VLCStyle.scale)
+                        height: VLCStyle.dp(2, VLCStyle.scale)
+                        radius: height / 2
+
+                        color: theme.fg.secondary
+                    }
                 }
             }
         }
@@ -282,15 +209,18 @@ T.Control {
 
                 Layout.fillWidth: true
 
-                font.weight: delegate.isCurrent ? Font.Bold : Font.DemiBold
+                font.weight: Font.Normal
                 text: delegate.title || qsTr("Unknown Title")
-                color: theme.fg.primary
+                color: delegate.isCurrent ? theme.accent : theme.fg.primary
             }
 
             Widgets.ListSubtitleLabel {
                 id: textArtist
 
                 Layout.fillWidth: true
+
+                // the title is centered when there is no artist
+                visible: text !== ""
 
                 text: delegate.artist || (delegate.title.length === 0 ? delegate.url : "")
                 color: theme.fg.primary
@@ -300,11 +230,12 @@ T.Control {
         Widgets.ListLabel {
             id: textDuration
 
+            Layout.leftMargin: VLCStyle.margin_small
+
             text: delegate.duration.formatHMS()
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
-            color: theme.fg.primary
-            opacity: 0.5
+            color: theme.fg.secondary
         }
     }
 

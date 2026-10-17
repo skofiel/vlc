@@ -24,6 +24,11 @@
 
 #include <QPushButton>
 #include <QButtonGroup>
+#include <QGridLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QPixmap>
+#include <QToolButton>
 #include <QFileDialog>
 
 #include <vlc_common.h>
@@ -78,6 +83,32 @@ FirstRunWizard::FirstRunWizard( qt_intf_t *_p_intf, QWidget *parent)
 
     /* the dark color scheme is the default one */
     ui.darkButton->setChecked( true );
+
+    /* Accent colors, below the color schemes (the first one is the default) */
+    accentGroup = new QButtonGroup( this );
+    const QStringList accentColors = MainCtx::accentColorPresets();
+    auto accentLayout = new QHBoxLayout;
+    accentLayout->addStretch();
+    for ( int i = 0; i < accentColors.size(); ++i )
+    {
+        auto button = new QToolButton( ui.colorSchemePage );
+        QPixmap swatch( 24, 24 );
+        swatch.fill( QColor( accentColors[i] ) );
+        button->setIcon( QIcon( swatch ) );
+        button->setIconSize( swatch.size() );
+        button->setCheckable( true );
+        button->setAutoRaise( true );
+        button->setToolTip( accentColors[i] );
+        button->setAccessibleName( accentColors[i] );
+        accentGroup->addButton( button, i );
+        accentLayout->addWidget( button );
+    }
+    accentLayout->addStretch();
+    accentGroup->button( 0 )->setChecked( true );
+
+    auto colorSchemeLayout = static_cast<QGridLayout*>( ui.colorSchemePage->layout() );
+    colorSchemeLayout->addWidget( new QLabel( qtr( "Accent color" ), ui.colorSchemePage ), 6, 0, 1, 3, Qt::AlignHCenter );
+    colorSchemeLayout->addLayout( accentLayout, 7, 0, 1, 3 );
 
     /* Setup the layout page */
     ui.layoutGroup->setId( ui.modernButton, 0 );
@@ -143,6 +174,9 @@ void FirstRunWizard::finish()
 
     /* Colour Page settings */
     p_intf->p_mi->getColorScheme()->setCurrentIndex( colorSchemeGroup->checkedId() );
+    const int accent = accentGroup->checkedId();
+    p_intf->p_mi->setAccentColor( ( accent <= 0 ) ? QStringLiteral( "default" )
+                                                  : MainCtx::accentColorPresets().at( accent ) );
 
     /* Layout Page settings */
     config_PutInt( "qt-menubar", ui.layoutGroup->checkedId() );

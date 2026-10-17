@@ -38,7 +38,7 @@ TracksPage {
     }
 
     function valueFromText(text, locale) {
-        return Number.fromLocaleString(locale, text.substring(0, text.length - 3))
+        return Helpers.numberFromFormattedText(text, qsTr("%1 ms"), locale)
     }
 
     // Children

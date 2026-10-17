@@ -478,6 +478,7 @@ void MLBookmarkModel::setPlayer(vlc_player_t * player)
         vlc_player_locker lock{ m_player };
         vlc_player_RemoveListener( m_player, m_listener );
     }
+    m_listener = nullptr;
 
     m_player = player;
 
@@ -540,6 +541,9 @@ void MLBookmarkModel::initModel()
     {
         vlc_player_locker lock{ m_player };
         vlc::threads::mutex_locker selflock{ m_mutex };
+        // called again when the media library changes
+        if ( m_listener )
+            vlc_player_RemoveListener( m_player, m_listener );
         m_listener = vlc_player_AddListener( m_player, &cbs, this );
         if ( m_listener == nullptr )
             throw std::bad_alloc{};

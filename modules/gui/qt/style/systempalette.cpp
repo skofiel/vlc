@@ -303,36 +303,39 @@ SystemPalette::SystemPalette(QObject* parent)
 
 }
 
+void SystemPalette::loadAccentColor()
+{
+    assert(m_ctx);
+    const QString accentColor = m_ctx->accentColor();
+
+    // default accent, also used when the color is not valid
+    orange500 = QColor("#FF8800");
+    orange800 = QColor("#FF610A");
+
+    if (accentColor == QLatin1String("default"))
+    {
+        // Use default
+    }
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+    else if (accentColor == QLatin1String("system"))
+    {
+        assert(qApp);
+        const auto palette = qApp->palette();
+
+        orange500 = palette.color(QPalette::Normal, QPalette::Accent);
+        orange800 = orange500.lighter(150);
+    }
+#endif
+    else if (const QColor color(accentColor); color.isValid())
+    {
+        orange500 = color;
+        orange800 = orange500.lighter(150);
+    }
+}
+
 void SystemPalette::componentComplete()
 {
-    {
-        assert(m_ctx);
-        char* accentColor = var_InheritString(m_ctx->getIntf(), "qt-accent-color");
-        assert(accentColor);
-
-        if (!strcmp(accentColor, "default"))
-        {
-            // Use default
-        }
-#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
-        else if (!strcmp(accentColor, "system"))
-        {
-            assert(qApp);
-            const auto palette = qApp->palette();
-
-            orange500 = palette.color(QPalette::Normal, QPalette::Accent);
-            orange800 = orange500.lighter(150);
-        }
-#endif
-        else
-        {
-            orange500 = QColor(accentColor);
-            orange800 = orange500.lighter(150);
-        }
-
-        free(accentColor);
-    }
-
+    loadAccentColor();
     updatePalette();
 }
 
@@ -378,7 +381,17 @@ void SystemPalette::setCtx(MainCtx* ctx)
 {
     if (ctx == m_ctx)
         return;
+    if (m_ctx)
+        disconnect(m_ctx, &MainCtx::accentColorChanged, this, nullptr);
     m_ctx = ctx;
+    if (m_ctx)
+    {
+        // the accent color can be changed from the settings
+        connect(m_ctx, &MainCtx::accentColorChanged, this, [this]() {
+            loadAccentColor();
+            updatePalette();
+        });
+    }
     emit ctxChanged();
     updatePalette();
 }
@@ -844,14 +857,13 @@ void SystemPalette::makeDarkPalette()
     //slider
     {
         C::ColorSet CS = C::Slider;
-        setColor(CS, C::Bg, C::Primary, C::Normal, setColorAlpha("#929292", 0.2)); //FIXME not in the palette
-        setColor(CS, C::Bg, C::Primary, C::Focused, setColorAlpha("#929292", 0.4));
-        setColor(CS, C::Bg, C::Primary, C::Hovered, setColorAlpha("#929292", 0.4));
+        setColor(CS, C::Bg, C::Primary, C::Normal, Qt::black);
 
         setColor(CS, C::Fg, C::Primary, C::Normal, orange500);
-        setColor(CS, C::Fg, C::Positive, C::Normal, "#6CCB5F");
+        // also used by the volume wedge gradient
+        setColor(CS, C::Fg, C::Positive, C::Normal, "#2EB82E");
         setColor(CS, C::Fg, C::Neutral, C::Normal, "#FCE100");
-        setColor(CS, C::Fg, C::Negative, C::Normal, "#FF99A4");
+        setColor(CS, C::Fg, C::Negative, C::Normal, "#E53935");
     }
 
     //Combo box

@@ -85,8 +85,13 @@ MainViewLoader {
     emptyLabel: emptylabel
 
     sortModel: [
-        { text: qsTr("Alphabetic"), criteria: "title"    },
-        { text: qsTr("Duration"),   criteria: "duration" }
+        { text: qsTr("Unwatched First"), criteria: "playcount", order: Qt.AscendingOrder },
+        { text: qsTr("Watched First"), criteria: "playcount", order: Qt.DescendingOrder },
+        { text: qsTr("Newest First"), criteria: "insertion", order: Qt.DescendingOrder },
+        { text: qsTr("Oldest First"), criteria: "insertion", order: Qt.AscendingOrder },
+        { text: qsTr("Title A-Z"), criteria: "title", order: Qt.AscendingOrder },
+        { text: qsTr("Title Z-A"), criteria: "title", order: Qt.DescendingOrder },
+        { text: qsTr("Duration"), criteria: "duration" }
     ]
 
 

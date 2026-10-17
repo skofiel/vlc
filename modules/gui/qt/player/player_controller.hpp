@@ -151,6 +151,8 @@ public:
     Q_PROPERTY(bool ratechangable READ isRateChangable NOTIFY rateChangableChanged FINAL)
 
     Q_PROPERTY(bool canRestorePlayback READ canRestorePlayback NOTIFY playbackRestoreQueried FINAL)
+    // position the playback can be restored to (invalid when it is unknown)
+    Q_PROPERTY(VLCDuration restoreTime READ restoreTime NOTIFY playbackRestoreQueried FINAL)
 
     // meta
     Q_PROPERTY(QString title READ getTitle NOTIFY currentMetaChanged FINAL)
@@ -204,6 +206,9 @@ public:
     Q_PROPERTY(VLCVarChoiceModel* aspectRatio READ getAspectRatio CONSTANT FINAL)
     Q_PROPERTY(VLCVarChoiceModel* crop READ getCrop CONSTANT FINAL)
     Q_PROPERTY(VLCVarChoiceModel* fit READ getFit CONSTANT FINAL)
+    // flip or rotation of the video ("transform" filter): "", "hflip",
+    // "vflip", "90", "180" or "270"
+    Q_PROPERTY(QString videoTransform READ getVideoTransform WRITE setVideoTransform NOTIFY videoTransformChanged FINAL)
     Q_PROPERTY(VLCVarChoiceModel* deinterlace READ getDeinterlace CONSTANT FINAL)
     Q_PROPERTY(VLCVarChoiceModel* deinterlaceMode READ getDeinterlaceMode CONSTANT FINAL)
     Q_PROPERTY(bool fullscreen READ isFullscreen WRITE setFullscreen NOTIFY fullscreenChanged FINAL)
@@ -331,6 +336,7 @@ public slots:
     void updatePositionFromTimer();
     void updateTimeFromTimer();
     bool canRestorePlayback() const;
+    VLCDuration restoreTime() const;
     void restorePlaybackPos();
     void openVLsub();
     void acknowledgeRestoreCallback();
@@ -391,6 +397,8 @@ public slots:
     VLCVarChoiceModel* getFit();
     VLCVarChoiceModel* getDeinterlace();
     VLCVarChoiceModel* getDeinterlaceMode();
+    QString getVideoTransform() const;
+    void setVideoTransform( const QString& transform );
     bool isFullscreen() const;
     void setFullscreen( bool );
     bool getWallpaperMode() const;
@@ -441,6 +449,7 @@ public slots:
 signals:
     //playback
     void playingStateChanged( PlayingState state );
+    void videoTransformChanged();
     void inputChanged( bool hasInput );
     void nameChanged( const QString& );
     void bufferingChanged( float );

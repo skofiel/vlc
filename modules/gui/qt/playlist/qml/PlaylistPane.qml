@@ -27,6 +27,7 @@ import VLC.Widgets as Widgets
 import VLC.Util
 import VLC.Playlist
 import VLC.Style
+import VLC.Dialogs
 
 T.Pane {
     id: root
@@ -132,29 +133,52 @@ T.Pane {
 
             spacing: VLCStyle.margin_xxxsmall
 
+            // "N items - duration", and the actions on the queue
             RowLayout {
                 id: titleRowLayout
 
                 anchors.left: parent.left
                 anchors.right: parent.right
 
-                spacing: VLCStyle.margin_normal
+                spacing: VLCStyle.margin_xxsmall
 
-                Widgets.SubtitleLabel {
+                Widgets.CaptionLabel {
                     id: titleLabel
 
                     Layout.fillWidth: true
 
-                    text: qsTr("Play Queue")
-                    color: theme.fg.primary
-                    font.weight: Font.Bold
-                    font.pixelSize: VLCStyle.dp(24, VLCStyle.scale)
+                    color: theme.fg.secondary
+                    font.pixelSize: VLCStyle.fontSize_large
+
+                    text: {
+                        if (listView.count <= 0)
+                            return qsTr("Play Queue")
+
+                        let duration
+                        const model = listView.model
+                        if (model instanceof PlaylistListModel) {
+                            duration = model.duration
+                        } else {
+                            // Proxy model, we need to use `QAbstractItemModel` api:
+
+                            duration = []
+                            for (let i = 0; i < listView.count; ++i) {
+                                const itemDuration = model.data(model.index(i, 0), PlaylistListModel.DurationRole)
+                                console.assert(itemDuration !== undefined && itemDuration !== null) // typeof `vlcDuration`
+                                duration.push(itemDuration)
+                            }
+                            duration = duration[0].sum(duration)
+                        }
+
+                        // VLC translates qsTr(singular, plural, n) with ngettext
+                        return qsTr("%1 - %2", "number of items - total duration")
+                            .arg(qsTr("%n item", "%n items", listView.count))
+                            .arg(duration.formatLong())
+                    }
                 }
 
                 Widgets.SortControl {
                     id: sort
-
-                    font.pixelSize: VLCStyle.icon_banner
 
                     description : qsTr("Sort")
 
@@ -193,6 +217,68 @@ T.Pane {
                     sortKey: MainPlaylistController.sortKey
 
                     Navigation.parentItem: root
+                    Navigation.rightItem: repeatButton
+                    Navigation.downItem: listView
+                }
+
+                Widgets.IconToolButton {
+                    id: repeatButton
+
+                    checked: MainPlaylistController.repeatMode !== PlaylistController.PLAYBACK_REPEAT_NONE
+                    text: (MainPlaylistController.repeatMode === PlaylistController.PLAYBACK_REPEAT_CURRENT)
+                          ? VLCIcons.repeat_one
+                          : VLCIcons.repeat_all
+                    description: qsTr("Repeat")
+
+                    onClicked: MainPlaylistController.toggleRepeatMode()
+
+                    Navigation.parentItem: root
+                    Navigation.leftItem: sort
+                    Navigation.rightItem: shuffleButton
+                    Navigation.downItem: listView
+                }
+
+                Widgets.IconToolButton {
+                    id: shuffleButton
+
+                    checked: MainPlaylistController.random
+                    text: VLCIcons.shuffle
+                    description: qsTr("Random")
+
+                    onClicked: MainPlaylistController.toggleRandom()
+
+                    Navigation.parentItem: root
+                    Navigation.leftItem: repeatButton
+                    Navigation.rightItem: removeButton
+                    Navigation.downItem: listView
+                }
+
+                Widgets.IconToolButton {
+                    id: removeButton
+
+                    enabled: (root.selectionModel?.selectedIndexesFlat.length ?? 0) > 0
+                    text: VLCIcons.remove
+                    description: qsTr("Remove selected")
+
+                    onClicked: listView.removeSelectedItems()
+
+                    Navigation.parentItem: root
+                    Navigation.leftItem: shuffleButton
+                    Navigation.rightItem: addButton
+                    Navigation.downItem: listView
+                }
+
+                Widgets.IconToolButton {
+                    id: addButton
+
+                    text: VLCIcons.add
+                    description: qsTr("Add files")
+
+                    // enqueue, without playing
+                    onClicked: DialogsProvider.simpleOpenDialog(false)
+
+                    Navigation.parentItem: root
+                    Navigation.leftItem: removeButton
                     Navigation.rightItem: searchBox
                     Navigation.downItem: listView
                 }
@@ -201,8 +287,6 @@ T.Pane {
                     id: searchBox
 
                     enabled: MainPlaylistController.count > 1
-
-                    toggleButton.font.pixelSize: VLCStyle.icon_banner
 
                     popBelow: true
 
@@ -213,7 +297,7 @@ T.Pane {
                     popup.topPadding: VLCStyle.margin_xxsmall
 
                     Navigation.parentItem: root
-                    Navigation.leftItem: sort
+                    Navigation.leftItem: addButton
                     Navigation.downItem: listView
 
                     Connections {
@@ -225,103 +309,12 @@ T.Pane {
                     }
                 }
             }
-
-            Widgets.CaptionLabel {
-                color: theme.fg.secondary
-                visible: listView.count !== 0
-                text: {
-                    if (listView.count <= 0)
-                        return "" // Not visible otherwise
-
-                    let duration
-                    const model = listView.model
-                    if (model instanceof PlaylistListModel) {
-                        duration = model.duration
-                    } else {
-                        // Proxy model, we need to use `QAbstractItemModel` api:
-
-                        duration = []
-                        for (let i = 0; i < listView.count; ++i) {
-                            const itemDuration = model.data(model.index(i, 0), PlaylistListModel.DurationRole)
-                            console.assert(itemDuration !== undefined && itemDuration !== null) // typeof `vlcDuration`
-                            duration.push(itemDuration)
-                        }
-                        duration = duration[0].sum(duration)
-                    }
-
-                    return qsTr("%1 elements, %2").arg(listView.count).arg(duration.formatLong())
-                }
-            }
         }
 
         Item {
             // Spacer
 
             implicitHeight: VLCStyle.margin_xsmall
-        }
-
-        RowLayout {
-            visible: listView.count !== 0
-
-            Layout.fillHeight: false
-            Layout.leftMargin: VLCStyle.margin_normal
-            Layout.rightMargin: Math.max(listView.T.ScrollBar.vertical.width, VLCStyle.margin_normal)
-
-            spacing: VLCStyle.margin_large
-
-            Widgets.IconLabel {
-                // play queue cover column
-                Layout.preferredWidth: VLCStyle.icon_playlistArt
-
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                text: VLCIcons.album_cover
-                font.pixelSize: VLCStyle.icon_playlistHeader
-
-                color: theme.fg.secondary
-
-                Accessible.role: Accessible.ColumnHeader
-                Accessible.name: qsTr("Cover")
-                Accessible.ignored: false
-            }
-
-            //Use Text here as we're redefining its Accessible.role
-            Text {
-                Layout.fillWidth: true
-
-                elide: Text.ElideRight
-                font.pixelSize: VLCStyle.fontSize_normal
-                textFormat: Text.PlainText
-
-                verticalAlignment: Text.AlignVCenter
-                text: qsTr("Title")
-                color: theme.fg.secondary
-
-                Accessible.role: Accessible.ColumnHeader
-                Accessible.name: text
-            }
-
-            Widgets.IconLabel {
-                Layout.preferredWidth: durationMetric.width
-
-                text: VLCIcons.time
-                color: theme.fg.secondary
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                font.pixelSize: VLCStyle.icon_playlistHeader
-
-                Accessible.role: Accessible.ColumnHeader
-                Accessible.name: qsTr("Duration")
-                Accessible.ignored: false
-
-                TextMetrics {
-                    id: durationMetric
-
-                    font.weight: Font.DemiBold
-                    font.pixelSize: VLCStyle.fontSize_normal
-                    text: "00:00"
-                }
-            }
         }
 
         Widgets.ListViewExt {
@@ -524,7 +517,9 @@ T.Pane {
                 }
             }
 
-            Keys.onDeletePressed: {
+            Keys.onDeletePressed: removeSelectedItems()
+
+            function removeSelectedItems() {
                 let items
 
                 const selectedIndexes = selectionModel.selectedIndexesFlat
