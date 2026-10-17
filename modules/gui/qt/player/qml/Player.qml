@@ -252,14 +252,22 @@ FocusScope {
             id: videoComponent
 
             FocusScope {
+                id: videoFrame
+
                 // Video
 
                 focus: true
+
+                // With the pinned controls, the video is in a rounded frame
+                readonly property bool framed: rootPlayer._controlsUnderVideo
+                readonly property real frameMargin: framed ? VLCStyle.margin_xsmall : 0
+                readonly property real frameRadius: framed ? VLCStyle.radius_medium : 0
 
                 VideoSurface {
                     id: videoSurface
 
                     anchors.fill: parent
+                    anchors.margins: videoFrame.frameMargin
 
                     // With regard to `ViewBlockingRectangle`, we
                     // do not need to prevent painting anything
@@ -300,6 +308,33 @@ FocusScope {
                     TouchDragHandler {
 
                     }
+                }
+
+                // NOTE: The video is drawn under the interface, so the frame
+                //       is drawn over it: the margins, and a ring whose inner
+                //       edge rounds the corners of the video.
+                Rectangle {
+                    anchors.fill: parent
+
+                    visible: videoFrame.framed
+
+                    color: "transparent"
+                    border.width: videoFrame.frameMargin
+                    border.color: windowTheme.bg.primary
+                }
+
+                Rectangle {
+                    x: videoSurface.x - videoFrame.frameRadius
+                    y: videoSurface.y - videoFrame.frameRadius
+                    width: videoSurface.width + 2 * videoFrame.frameRadius
+                    height: videoSurface.height + 2 * videoFrame.frameRadius
+
+                    visible: videoFrame.framed
+
+                    radius: 2 * videoFrame.frameRadius
+                    color: "transparent"
+                    border.width: videoFrame.frameRadius
+                    border.color: windowTheme.bg.primary
                 }
 
                 component FadeRectangle : Rectangle {
