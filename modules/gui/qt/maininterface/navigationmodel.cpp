@@ -283,13 +283,19 @@ public:
             m_model.children.push_back(std::move(musicEntry));
         }
 
-        m_model.children.emplace_back(qtr("Browse"), "network", VLCIcons::topbar_network, QStringLiteral(":/icons/ic_fluent_wifi_1.svg"));
+        // local and network browsing, and the discovery services
+        ModelEntry networkEntry{ qtr("Network"), "network", VLCIcons::topbar_network, QStringLiteral(":/icons/ic_fluent_wifi_1.svg") };
+        networkEntry.children.emplace_back(qtr("Browse"), "home");
+        networkEntry.children.emplace_back(qtr("Services"), "services");
+        networkEntry.children.emplace_back(qtr("URL"), "url");
+        m_model.children.push_back(std::move(networkEntry));
 
-        ModelEntry discoverEntry{ qtr("Discover"), "discover", VLCIcons::topbar_discover, QStringLiteral(":/icons/ic_fluent_globe.svg") };
-        discoverEntry.children.emplace_back(qtr("Services"), "services");
-
-        discoverEntry.children.emplace_back(qtr("URL"), "url");
-        m_model.children.push_back(std::move(discoverEntry));
+        if (m_hasMedialib)
+        {
+            // video and audio playlists together
+            m_model.children.emplace_back(qtr("Playlists"), "playlists", VLCIcons::playlist, QStringLiteral(":/menu/ic_playlist.svg"));
+            m_model.children.emplace_back(qtr("Recent"), "recent", VLCIcons::history, QStringLiteral(":/icons/history.svg"));
+        }
 
         m_model.visibleChildren = m_model.children.size();
     }

@@ -884,6 +884,8 @@ modules/gui/qt/medialibrary/qml/MusicTracksDisplay.qml
 modules/gui/qt/medialibrary/qml/PlaylistMedia.qml
 modules/gui/qt/medialibrary/qml/PlaylistMediaDisplay.qml
 modules/gui/qt/medialibrary/qml/PlaylistMediaList.qml
+modules/gui/qt/medialibrary/qml/PlaylistsDisplay.qml
+modules/gui/qt/medialibrary/qml/RecentsDisplay.qml
 modules/gui/qt/medialibrary/qml/UrlListDisplay.qml
 modules/gui/qt/medialibrary/qml/VideoAll.qml
 modules/gui/qt/medialibrary/qml/VideoAllDisplay.qml
@@ -912,7 +914,6 @@ modules/gui/qt/network/qml/BrowseDisplay.qml
 modules/gui/qt/network/qml/BrowseHomeDisplay.qml
 modules/gui/qt/network/qml/BrowseTreeDisplay.qml
 modules/gui/qt/network/qml/BrowseTreeHeader.qml
-modules/gui/qt/network/qml/DiscoverDisplay.qml
 modules/gui/qt/network/qml/DiscoverUrlDisplay.qml
 modules/gui/qt/network/qml/NetworkGridItem.qml
 modules/gui/qt/network/qml/ServicesHomeDisplay.qml
