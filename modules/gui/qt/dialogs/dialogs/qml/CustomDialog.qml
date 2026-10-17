@@ -37,7 +37,7 @@ ModalDialog {
     function ask(text, acceptCb, rejectCb, buttons) {
         //TODO: use a Promise here when dropping support of Qt 5.11
         let okTxt = qsTr("OK")
-        let cancelTxt = qsTr("cancel")
+        let cancelTxt = qsTr("Cancel")
         if (buttons) {
             if (buttons.cancel) {
                 cancelTxt = buttons.cancel

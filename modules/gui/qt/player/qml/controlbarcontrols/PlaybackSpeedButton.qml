@@ -33,7 +33,7 @@ PopupIconToolButton {
 
     text: qsTr("Playback Speed")
 
-    description: qsTr("change playback speed")
+    description: qsTr("Change playback speed")
 
     AccessibleCompat.id: "playbackSpeedButton"
 
@@ -71,8 +71,8 @@ PopupIconToolButton {
 
             font.pixelSize: VLCStyle.fontSize_normal
 
-            text: !root.paintOnly ? qsTr("%1x").arg(+Player.rate.toFixed(2))
-                                  : qsTr("1x")
+            text: !root.paintOnly ? qsTr("%1x").arg(Helpers.formatNumber(Player.rate, 2))
+                                  : qsTr("%1x").arg(Helpers.formatNumber(1, 2))
 
             color: root.color
         }

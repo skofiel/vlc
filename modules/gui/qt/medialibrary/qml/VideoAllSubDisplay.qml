@@ -101,7 +101,9 @@ Widgets.PageExt {
 
         // VideoAll events reimplementation
 
-        function getLabelGroup(model, string) {
+        // labelFunction(count) returns the label of a group of count videos,
+        // with a %1 replaced by the count
+        function getLabelGroup(model, labelFunction) {
             if (!model) return ""
 
             const count = model.count
@@ -110,9 +112,9 @@ Widgets.PageExt {
                 return getLabel(model)
             } else {
                 if (count < 100)
-                    return [ string.arg(count) ]
+                    return [ labelFunction(count).arg(count) ]
                 else
-                    return [ string.arg("99+") ]
+                    return [ labelFunction(count).arg("99+") ]
             }
         }
 
@@ -188,7 +190,7 @@ Widgets.PageExt {
                 }
 
                 property var gridLabels: function (model) {
-                    return videoAll.getLabelGroup(model, qsTr("%1 Videos"))
+                    return videoAll.getLabelGroup(model, (count) => qsTr("%1 Video", "%1 Videos", count))
                 }
 
                 property bool showGroupCountColumn: true
@@ -247,7 +249,7 @@ Widgets.PageExt {
                 }
 
                 property var gridLabels: function (model) {
-                    return videoAll.getLabelGroup(model, qsTr("%1 Videos"))
+                    return videoAll.getLabelGroup(model, (count) => qsTr("%1 Video", "%1 Videos", count))
                 }
 
                 property bool showGroupCountColumn: true

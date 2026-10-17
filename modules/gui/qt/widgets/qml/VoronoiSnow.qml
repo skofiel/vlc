@@ -18,6 +18,8 @@
 import QtQuick
 import QtQuick.Window
 
+import VLC.Style
+
 ShaderEffect {
     id: effect
 
@@ -41,6 +43,7 @@ ShaderEffect {
     readonly property int yFlip: ((GraphicsInfo.api === GraphicsInfo.Direct3D11) || (GraphicsInfo.api === GraphicsInfo.Direct3D12)) ? -1 : 1
 
     UniformAnimator on time {
+        running: !VLCStyle.reduceMotion
         loops: Animation.Infinite
         from: 0
         to: 50

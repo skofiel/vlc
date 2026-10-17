@@ -369,7 +369,7 @@ Item {
                     Widgets.TextToolButton {
                         id: loginCancel
                         Layout.fillWidth: true
-                        text: qsTr("cancel")
+                        text: qsTr("Cancel")
 
                         Navigation.upItem: savePassword
                         Navigation.rightItem: loginOk

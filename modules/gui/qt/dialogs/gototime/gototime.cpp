@@ -52,7 +52,7 @@ GotoTimeDialog::GotoTimeDialog( qt_intf_t *_p_intf)
     buttonBox->addButton( gotoButton, QDialogButtonBox::AcceptRole );
     buttonBox->addButton( cancelButton, QDialogButtonBox::RejectRole );
 
-    QLabel *timeIntro = new QLabel( qtr( "Go to time" ) + ":" );
+    QLabel *timeIntro = new QLabel( qtr( "Go to time:" ) );
     timeIntro->setWordWrap( true );
     timeIntro->setAlignment( Qt::AlignCenter );
 

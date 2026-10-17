@@ -30,10 +30,10 @@ WindowDialog {
     id: root
 
     width: minimumWidth
-    height: 600
+    height: VLCStyle.dp(600, VLCStyle.scale)
 
-    minimumWidth: 825
-    minimumHeight: 400
+    minimumWidth: VLCStyle.dp(825, VLCStyle.scale)
+    minimumHeight: VLCStyle.dp(400, VLCStyle.scale)
 
     modal: true
     title: qsTr("Toolbar Editor")

@@ -146,6 +146,45 @@ QtObject {
         return getFlickableBoundedContentY(flickable, newContentY)
     }
 
+    // formats a number in the language of the interface, with at most
+    // `decimals` decimals (without the trailing zeros)
+    function formatNumber(value : real, decimals : int) : string {
+        const locale = Qt.locale()
+        let text = Number(value).toLocaleString(locale, 'f', decimals)
+        if (decimals > 0 && text.indexOf(locale.decimalPoint) !== -1) {
+            let end = text.length
+            while (end > 0 && text[end - 1] === locale.zeroDigit)
+                --end
+            if (text.substr(end - locale.decimalPoint.length, locale.decimalPoint.length) === locale.decimalPoint)
+                end -= locale.decimalPoint.length
+            text = text.substring(0, end)
+        }
+        return text
+    }
+
+    // reads the number of a text formatted with a translated format (e.g.
+    // "%1 ms" translated): the prefix and the suffix are those of the translation
+    function numberFromFormattedText(text : string, format : string, locale : var) : real {
+        const affixes = format.split("%1")
+        let number = text.trim()
+        const prefix = (affixes[0] ?? "").trim()
+        const suffix = (affixes[1] ?? "").trim()
+        if (prefix.length > 0 && number.startsWith(prefix))
+            number = number.substring(prefix.length)
+        if (suffix.length > 0 && number.endsWith(suffix))
+            number = number.substring(0, number.length - suffix.length)
+        try {
+            return Number.fromLocaleString(locale, number.trim())
+        } catch (e) {
+            return NaN
+        }
+    }
+
+    // escapes a text to insert in a Text.StyledText
+    function escapeStyledText(text : string) : string {
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    }
+
     function isArray(obj : var) : bool {
         return (obj?.length !== undefined) ?? false
     }
