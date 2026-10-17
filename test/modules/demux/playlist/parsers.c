@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 /*****************************************************************************
- * ram.c: RAM playlist unit testing
+ * parsers.c: playlist parsers unit testing (RAM, B4S)
  *****************************************************************************
  * Copyright (C) 2026 VLC authors and VideoLAN
  *****************************************************************************/
@@ -23,6 +23,7 @@
 
 static int runtest(const char *run,
                    libvlc_instance_t *vlc,
+                   const char *module, const char *url,
                    const char *data, size_t datasz,
                    int(*checkfunc)(const char *, const input_item_node_t *))
 {
@@ -30,8 +31,7 @@ static int runtest(const char *run,
     if(!s)
         BAILOUT(run);
 
-    demux_t *pl = demux_New(VLC_OBJECT(vlc->p_libvlc_int), "ram",
-                            "http://example.com/playlist.ram", s, NULL);
+    demux_t *pl = demux_New(VLC_OBJECT(vlc->p_libvlc_int), module, url, s, NULL);
     if(!pl || !pl->pf_readdir)
     {
         vlc_stream_Delete(s);
@@ -57,11 +57,13 @@ static int runtest(const char *run,
     return ret;
 }
 
+#define RAM_URL "http://example.com/playlist.ram"
+
 /* Properly terminated clipinfo */
 static const char ramplaylist0[] =
     "http://example.com/a.rm?clipinfo=\"title=foo|artist name=bar\"\n";
 
-static int check0(const char *run, const input_item_node_t *p_node)
+static int check_ram0(const char *run, const input_item_node_t *p_node)
 {
     EXPECT(p_node->i_children == 1);
     EXPECT(p_node->pp_children[0]->p_item->psz_uri != NULL);
@@ -74,10 +76,30 @@ static const char ramplaylist1[] =
     "http://h:x/a.rm?clipinfo=\"title=foo|artist name=bar\n"
     "http://h:x/b.rm?clipinfo=\"title=foo\n";
 
-static int check1(const char *run, const input_item_node_t *p_node)
+static int check_nothing(const char *run, const input_item_node_t *p_node)
 {
     (void) p_node;
     (void) run;
+    return 0;
+}
+
+#define B4S_URL "http://example.com/playlist.b4s"
+
+/* The first line is skipped by the B4S parser. The first entry has no
+ * Playstring and must be ignored. */
+static const char b4splaylist0[] =
+    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
+    "<WinampXML><playlist num_entries=\"2\">"
+    "<entry><Name>no playstring</Name></entry>"
+    "<entry Playstring=\"http://example.com/a.mp3\"><Name>a</Name></entry>"
+    "</playlist></WinampXML>\n";
+
+static int check_b4s0(const char *run, const input_item_node_t *p_node)
+{
+    EXPECT(p_node->i_children == 1);
+    const input_item_t *p_item = p_node->pp_children[0]->p_item;
+    EXPECT(!strcmp(p_item->psz_uri, "http://example.com/a.mp3"));
+    EXPECT(!strcmp(p_item->psz_name, "a"));
     return 0;
 }
 
@@ -89,9 +111,14 @@ int main(void)
     if(!vlc)
         return 1;
 
-    int ret = runtest("run0", vlc, ramplaylist0, sizeof(ramplaylist0) - 1, check0);
+    int ret = runtest("ram0", vlc, "ram", RAM_URL,
+                      ramplaylist0, sizeof(ramplaylist0) - 1, check_ram0);
     if(!ret)
-        ret = runtest("run1", vlc, ramplaylist1, sizeof(ramplaylist1) - 1, check1);
+        ret = runtest("ram1", vlc, "ram", RAM_URL,
+                      ramplaylist1, sizeof(ramplaylist1) - 1, check_nothing);
+    if(!ret)
+        ret = runtest("b4s0", vlc, "shout-b4s", B4S_URL,
+                      b4splaylist0, sizeof(b4splaylist0) - 1, check_b4s0);
 
     libvlc_release(vlc);
     return ret;

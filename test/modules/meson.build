@@ -120,11 +120,11 @@ vlc_tests += {
 }
 
 vlc_tests += {
-    'name' : 'test_modules_playlist_ram',
-    'sources' : files('demux/playlist/ram.c'),
+    'name' : 'test_modules_playlist_parsers',
+    'sources' : files('demux/playlist/parsers.c'),
     'suite' : ['modules', 'test_modules'],
     'link_with' : [libvlc, libvlccore],
-    'module_depends' : ['playlist'],
+    'module_depends' : ['playlist', 'xml'],
 }
 
 vlc_tests += {
