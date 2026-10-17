@@ -267,6 +267,11 @@ Interfaces:
    Recent) with breadcrumbs, forward navigation and watched videos
  * Qt: new settings dialog with search, and accent color chosen in the
    first run wizard or in the settings
+ * Qt: redesigned player: pinned one-row control bar with the seek bar,
+   video in a rounded frame, title bar with the cone, the menu, the page to
+   go back to and a fullscreen button, resume notice with the position,
+   video settings (flip, rotation, zoom, aspect ratio, crop) in the tracks
+   menu, flat main menu, and dark menus with the dark color scheme
  * Qt: accessibility: option to reduce the motion of the interface, states
    of the toggle buttons and roles of the rows exposed to screen readers,
    right-to-left languages mirrored, contrast of the palettes fixed
