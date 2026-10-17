@@ -242,7 +242,10 @@ static void ProcessEntry( int *pi_n_entry, xml_reader_t *p_xml_reader,
                         break;
                 }
                 else
+                {
+                    free( psz_moreinfo );
                     psz_moreinfo = strdup( psz_node );
+                }
                 vlc_xml_decode( psz_moreinfo );
             }
             else if( !strncasecmp( psz_node, "ABSTRACT", 8 ) )
@@ -282,6 +285,7 @@ static void ProcessEntry( int *pi_n_entry, xml_reader_t *p_xml_reader,
                 while( psz_txt != NULL && strncasecmp( psz_txt, "HREF", 4) );
                 if( psz_txt == NULL )
                     break;
+                free( psz_href );
                 psz_href = strdup( psz_node );
 
                 if( asprintf( &psz_name, "%d. %s", *pi_n_entry, psz_title ) == -1)
@@ -726,7 +730,10 @@ static int ReadDir( stream_t *p_demux, input_item_node_t *p_subitems )
                         break;
                 }
                 else
+                {
+                    free( psz_txt );
                     psz_txt = strdup( psz_node );
+                }
 
                 vlc_xml_decode( psz_txt );
                 input_item_SetURL( p_current_input, psz_txt );
@@ -753,15 +760,24 @@ static int ReadDir( stream_t *p_demux, input_item_node_t *p_subitems )
                 {
                     psz_tmp = xml_ReaderNextAttr( p_xml_reader, &psz_node );
                 }
-                while( psz_tmp && !strncasecmp( psz_tmp, "HREF", 4 ) );
+                while( psz_tmp && strncasecmp( psz_tmp, "HREF", 4 ) );
                 if( ! psz_tmp )
                     break;
 
                 /* Create new input item */
-                input_item_t *p_input;
+                free( psz_txt );
                 psz_txt = strdup( psz_node );
+                if( psz_txt == NULL )
+                    break;
                 vlc_xml_decode( psz_txt );
-                p_input = input_item_New( psz_txt, psz_title_asx );
+
+                char *psz_mrl = ProcessMRL( psz_txt, psz_base );
+                if( psz_mrl == NULL )
+                    continue;
+                input_item_t *p_input = input_item_New( psz_mrl, psz_title_asx );
+                free( psz_mrl );
+                if( p_input == NULL )
+                    continue;
                 input_item_node_AppendItem( p_subitems, p_input );
 
                 input_item_Release( p_input );
