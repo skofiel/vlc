@@ -272,6 +272,8 @@ struct vlc_player_t
     struct vlc_list vout_listeners;
 
     input_resource_t *resource;
+    /* held audio output on which the player callbacks are registered */
+    audio_output_t *callbacks_aout;
     vlc_renderer_item_t *renderer;
 
     input_item_t *media;
