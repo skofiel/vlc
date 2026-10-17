@@ -246,6 +246,7 @@ sout_access_out_t *sout_AccessOutNew( vlc_object_t *p_sout,
         free( p_access->psz_path );
 error:
         free( p_access->psz_access );
+        config_ChainDestroy( p_access->p_cfg );
         vlc_object_delete(p_access);
         return( NULL );
     }
