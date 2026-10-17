@@ -62,8 +62,12 @@ vlc_playlist_ItemsInserted(vlc_playlist_t *playlist, size_t index, size_t count,
                            bool subitems)
 {
     if (playlist->order == VLC_PLAYLIST_PLAYBACK_ORDER_RANDOM)
-        randomizer_Add(&playlist->randomizer,
-                       &playlist->items.data[index], count);
+    {
+        /* the space has been reserved by the caller */
+        bool ok = randomizer_Add(&playlist->randomizer,
+                                 &playlist->items.data[index], count);
+        assert(ok); (void) ok;
+    }
 
     struct vlc_playlist_state state;
     vlc_playlist_state_Save(playlist, &state);
@@ -270,6 +274,11 @@ vlc_playlist_Insert(vlc_playlist_t *playlist, size_t index,
     vlc_playlist_AssertLocked(playlist);
     assert(index <= playlist->items.size);
 
+    /* the items must be in the randomizer as soon as they are in the list */
+    if (playlist->order == VLC_PLAYLIST_PLAYBACK_ORDER_RANDOM &&
+        !randomizer_Reserve(&playlist->randomizer, count))
+        return VLC_ENOMEM;
+
     /* make space in the vector */
     if (!vlc_vector_insert_hole(&playlist->items, index, count))
         return VLC_ENOMEM;
@@ -347,7 +356,10 @@ vlc_playlist_Replace(vlc_playlist_t *playlist, size_t index,
     {
         randomizer_Remove(&playlist->randomizer,
                           &playlist->items.data[index], 1);
-        randomizer_Add(&playlist->randomizer, &item, 1);
+        /* cannot fail: the removal does not shrink the capacity below the
+         * size + 1 */
+        bool ok = randomizer_Add(&playlist->randomizer, &item, 1);
+        assert(ok); (void) ok;
     }
 
     vlc_playlist_item_t *old = playlist->items.data[index];
@@ -378,6 +390,10 @@ vlc_playlist_Expand(vlc_playlist_t *playlist, size_t index,
 
         if (count > 1)
         {
+            if (playlist->order == VLC_PLAYLIST_PLAYBACK_ORDER_RANDOM &&
+                !randomizer_Reserve(&playlist->randomizer, count - 1))
+                return VLC_ENOMEM;
+
             /* make space in the vector */
             if (!vlc_vector_insert_hole(&playlist->items, index + 1, count - 1))
                 return VLC_ENOMEM;
