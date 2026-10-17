@@ -171,411 +171,62 @@ private slots:
 
     void testInitialValues() {
         initWithMedialib(true);
-        //all is collapsed
         QCOMPARE(m_model->rowCount(), 6);
         int i = 0;
         COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Closed);
-        COMPARE_ROW(i++, "Music", Closed);
-        COMPARE_ROW(i++, "Network", Closed);
+        COMPARE_ROW(i++, "Videos", Leaf);
+        COMPARE_ROW(i++, "Music", Leaf);
+        COMPARE_ROW(i++, "Network", Leaf);
         COMPARE_ROW(i++, "Playlists", Leaf);
         COMPARE_ROW(i++, "Recent", Leaf);
     }
 
     void testInitialValuesNoML() {
         initWithMedialib(false);
-        //all is collapsed
         QCOMPARE(m_model->rowCount(), 2);
         int i = 0;
         COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Network", Closed);
-    }
-
-    void testExpandOOB() {
-        initWithMedialib(true);
-        QVERIFY(m_model->setData(m_model->index(1), true, NavigationModel::EXPANDED));
-        QCOMPARE(m_model->rowCount(), 8);
-        QVERIFY(!m_model->setData(m_model->index(8), true, NavigationModel::EXPANDED));
-        QVERIFY(!m_model->setData(m_model->index(8), false, NavigationModel::EXPANDED));
-    }
-
-    void testExpandExpandedOOB() {
-        initWithMedialib(true);
-        QVERIFY(!m_model->setData(m_model->index(6), true, NavigationModel::EXPANDED));
-        QVERIFY(!m_model->setData(m_model->index(6), false, NavigationModel::EXPANDED));
-    }
-
-    void testExpandVideo() {
-        initWithMedialib(true);
-        QVERIFY(m_model->setData(m_model->index(1), true, NavigationModel::EXPANDED));
-
-        QCOMPARE(m_model->rowCount(), 8);
-        VERIFY_INSERTED(2,3);
-        VERIFY_NOT_REMOVED;
-
-        int i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Opened);
-        {
-            COMPARE_ROW(i++, "All", Leaf);
-            COMPARE_ROW(i++, "Playlists", Leaf);
-        }
-        COMPARE_ROW(i++, "Music", Closed);
-        COMPARE_ROW(i++, "Network", Closed);
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
+        COMPARE_ROW(i++, "Network", Leaf);
     }
 
     void testURI()
     {
         initWithMedialib(true);
-        //expand video
-        QVERIFY(m_model->setData(m_model->index(1), true, NavigationModel::EXPANDED));
-        QCOMPARE(m_model->rowCount(), 8);
 
-        QStringList homeUri = {"home"};
-        QCOMPARE(
-            m_model->data(m_model->index(0), NavigationModel::URI),
-            homeUri
-            );
-        qWarning() << homeUri << m_model->data(m_model->index(0), NavigationModel::DEPTH);
-
-        QStringList videoALLUri = {"video", "all"};
-        QCOMPARE(
-            m_model->data(m_model->index(2), NavigationModel::URI),
-            videoALLUri
-            );
-        qWarning() << videoALLUri << m_model->data(m_model->index(2), NavigationModel::DEPTH);
-
-        QStringList musicUri = {"music"};
-        QCOMPARE(
-            m_model->data(m_model->index(4), NavigationModel::URI),
-            musicUri
-            );
+        const QStringList expected[] = {
+            {"home"}, {"video"}, {"music"}, {"network"}, {"playlists"}, {"recent"}
+        };
+        for (int i = 0; i < 6; ++i)
+        {
+            QCOMPARE(m_model->data(m_model->index(i), NavigationModel::URI), expected[i]);
+            QCOMPARE(m_model->data(m_model->index(i), NavigationModel::DEPTH), 0);
+        }
     }
 
-    void testExpandMusic() {
-        initWithMedialib(true);
-        QVERIFY(m_model->setData(m_model->index(2), true, NavigationModel::EXPANDED));
-
-        QCOMPARE(m_model->rowCount(), 11);
-        VERIFY_INSERTED(3, 7);
-        VERIFY_NOT_REMOVED;
-
-        int i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Closed);
-        COMPARE_ROW(i++, "Music", Opened);
-        {
-            COMPARE_ROW(i++, "Artists", Leaf);
-            COMPARE_ROW(i++, "Albums", Leaf);
-            COMPARE_ROW(i++, "Tracks", Leaf);
-            COMPARE_ROW(i++, "Genres", Leaf);
-            COMPARE_ROW(i++, "Playlists", Leaf);
-        }
-        COMPARE_ROW(i++, "Network", Closed);
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
-    }
-
-    void testExpandMusicTwice() {
-        initWithMedialib(true);
-        QVERIFY(m_model->setData(m_model->index(2), true, NavigationModel::EXPANDED));
-
-        QCOMPARE(m_model->rowCount(), 11);
-        VERIFY_INSERTED(3, 7);
-        VERIFY_NOT_REMOVED;
-
-        int i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Closed);
-        COMPARE_ROW(i++, "Music", Opened);
-        {
-            COMPARE_ROW(i++, "Artists", Leaf);
-            COMPARE_ROW(i++, "Albums", Leaf);
-            COMPARE_ROW(i++, "Tracks", Leaf);
-            COMPARE_ROW(i++, "Genres", Leaf);
-            COMPARE_ROW(i++, "Playlists", Leaf);
-        }
-        COMPARE_ROW(i++, "Network", Closed);
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
-
-        QVERIFY(m_model->setData(m_model->index(2), true, NavigationModel::EXPANDED));
-
-        QCOMPARE(m_model->rowCount(), 11);
-        VERIFY_NOT_INSERTED;
-        VERIFY_NOT_REMOVED;
-
-        i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Closed);
-        COMPARE_ROW(i++, "Music", Opened);
-        {
-            COMPARE_ROW(i++, "Artists", Leaf);
-            COMPARE_ROW(i++, "Albums", Leaf);
-            COMPARE_ROW(i++, "Tracks", Leaf);
-            COMPARE_ROW(i++, "Genres", Leaf);
-            COMPARE_ROW(i++, "Playlists", Leaf);
-        }
-        COMPARE_ROW(i++, "Network", Closed);
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
-    }
-
+    // the entries have no sub-entries: expanding them changes nothing
     void testExpandLeaf() {
         initWithMedialib(true);
-        QVERIFY(m_model->setData(m_model->index(4), true, NavigationModel::EXPANDED));
+        for (int i = 0; i < 6; ++i)
+        {
+            QVERIFY(m_model->setData(m_model->index(i), true, NavigationModel::EXPANDED));
+            QVERIFY(m_model->setData(m_model->index(i), false, NavigationModel::EXPANDED));
+        }
 
         QCOMPARE(m_model->rowCount(), 6);
         VERIFY_NOT_INSERTED;
         VERIFY_NOT_REMOVED;
-
-        int i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Closed);
-        COMPARE_ROW(i++, "Music", Closed);
-        COMPARE_ROW(i++, "Network", Closed);
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
+        COMPARE_ROW(1, "Videos", Leaf);
     }
 
-    void testRetractLeaf() {
+    void testExpandOOB() {
         initWithMedialib(true);
-        QVERIFY(m_model->setData(m_model->index(4), false, NavigationModel::EXPANDED));
+        QVERIFY(!m_model->setData(m_model->index(6), true, NavigationModel::EXPANDED));
+        QVERIFY(!m_model->setData(m_model->index(6), false, NavigationModel::EXPANDED));
 
         QCOMPARE(m_model->rowCount(), 6);
         VERIFY_NOT_INSERTED;
         VERIFY_NOT_REMOVED;
-
-        int i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Closed);
-        COMPARE_ROW(i++, "Music", Closed);
-        COMPARE_ROW(i++, "Network", Closed);
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
     }
-
-    void testExpandNetwork() {
-        initWithMedialib(true);
-        QVERIFY(m_model->setData(m_model->index(3), true, NavigationModel::EXPANDED));
-
-        QCOMPARE(m_model->rowCount(), 9);
-        VERIFY_INSERTED(4, 6);
-        VERIFY_NOT_REMOVED;
-
-        int i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Closed);
-        COMPARE_ROW(i++, "Music", Closed);
-        COMPARE_ROW(i++, "Network", Opened);
-        {
-            COMPARE_ROW(i++, "Browse", Leaf);
-            COMPARE_ROW(i++, "Services", Leaf);
-            COMPARE_ROW(i++, "URL", Leaf);
-        }
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
-
-        QStringList servicesUri = {"network", "services"};
-        QCOMPARE(
-            m_model->data(m_model->index(5), NavigationModel::URI),
-            servicesUri
-            );
-    }
-
-    void testExpandVideoRetractVideo() {
-        initWithMedialib(true);
-        QVERIFY(m_model->setData(m_model->index(1), true, NavigationModel::EXPANDED));
-
-        QCOMPARE(m_model->rowCount(), 8);
-        VERIFY_INSERTED(2, 3);
-        VERIFY_NOT_REMOVED;
-
-        int i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Opened);
-        {
-            COMPARE_ROW(i++, "All", Leaf);
-            COMPARE_ROW(i++, "Playlists", Leaf);
-        }
-        COMPARE_ROW(i++, "Music", Closed);
-        COMPARE_ROW(i++, "Network", Closed);
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
-
-        QVERIFY(m_model->setData(m_model->index(1), false, NavigationModel::EXPANDED));
-
-        QCOMPARE(m_model->rowCount(), 6);
-        VERIFY_REMOVED(2, 3);
-        VERIFY_NOT_INSERTED;
-
-        i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Closed);
-        COMPARE_ROW(i++, "Music", Closed);
-        COMPARE_ROW(i++, "Network", Closed);
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
-    }
-
-    void testExpandVideoRetractAll() {
-        initWithMedialib(true);
-        QVERIFY(m_model->setData(m_model->index(1), true, NavigationModel::EXPANDED));
-
-        QCOMPARE(m_model->rowCount(), 8);
-        VERIFY_INSERTED(2, 3);
-        VERIFY_NOT_REMOVED;
-
-        int i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Opened);
-        {
-            COMPARE_ROW(i++, "All", Leaf);
-            COMPARE_ROW(i++, "Playlists", Leaf);
-        }
-        COMPARE_ROW(i++, "Music", Closed);
-        COMPARE_ROW(i++, "Network", Closed);
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
-
-        QVERIFY(!m_model->setData(m_model->index(8), false, NavigationModel::EXPANDED));
-
-        QCOMPARE(m_model->rowCount(), 8);
-        VERIFY_NOT_INSERTED;
-        VERIFY_NOT_REMOVED;
-
-        i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Opened);
-        {
-            COMPARE_ROW(i++, "All", Leaf);
-            COMPARE_ROW(i++, "Playlists", Leaf);
-        }
-        COMPARE_ROW(i++, "Music", Closed);
-        COMPARE_ROW(i++, "Network", Closed);
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
-    }
-
-
-    void testExpandVideoExpandAudio() {
-        initWithMedialib(true);
-        QVERIFY(m_model->setData(m_model->index(1), true, NavigationModel::EXPANDED));
-
-        QCOMPARE(m_model->rowCount(), 8);
-        VERIFY_INSERTED(2,3);
-        VERIFY_NOT_REMOVED;
-
-        int i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Opened);
-        {
-            COMPARE_ROW(i++, "All", Leaf);
-            COMPARE_ROW(i++, "Playlists", Leaf);
-        }
-        COMPARE_ROW(i++, "Music", Closed);
-        COMPARE_ROW(i++, "Network", Closed);
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
-
-        QVERIFY(m_model->setData(m_model->index(4), true, NavigationModel::EXPANDED));
-
-        QCOMPARE(m_model->rowCount(), 11);
-        VERIFY_REMOVED(2, 3);
-        VERIFY_INSERTED(3, 7);
-
-        i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Closed);
-        COMPARE_ROW(i++, "Music", Opened);
-        {
-            COMPARE_ROW(i++, "Artists", Leaf);
-            COMPARE_ROW(i++, "Albums", Leaf);
-            COMPARE_ROW(i++, "Tracks", Leaf);
-            COMPARE_ROW(i++, "Genres", Leaf);
-            COMPARE_ROW(i++, "Playlists", Leaf);
-        }
-        COMPARE_ROW(i++, "Network", Closed);
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
-    }
-
-    void testExpandVideoRetractAudio() {
-        initWithMedialib(true);
-        QVERIFY(m_model->setData(m_model->index(1), true, NavigationModel::EXPANDED));
-
-        QCOMPARE(m_model->rowCount(), 8);
-        VERIFY_INSERTED(2, 3);
-        VERIFY_NOT_REMOVED;
-
-        int i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Opened);
-        {
-            COMPARE_ROW(i++, "All", Leaf);
-            COMPARE_ROW(i++, "Playlists", Leaf);
-        }
-        COMPARE_ROW(i++, "Music", Closed);
-        COMPARE_ROW(i++, "Network", Closed);
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
-
-        QVERIFY(m_model->setData(m_model->index(4), false, NavigationModel::EXPANDED));
-
-        QCOMPARE(m_model->rowCount(), 8);
-        VERIFY_NOT_INSERTED;
-        VERIFY_NOT_REMOVED;
-
-        i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Opened);
-        {
-            COMPARE_ROW(i++, "All", Leaf);
-            COMPARE_ROW(i++, "Playlists", Leaf);
-        }
-        COMPARE_ROW(i++, "Music", Closed);
-        COMPARE_ROW(i++, "Network", Closed);
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
-    }
-
-    void testExpandVideoExpandHome() {
-        initWithMedialib(true);
-        QVERIFY(m_model->setData(m_model->index(1), true, NavigationModel::EXPANDED));
-
-        QCOMPARE(m_model->rowCount(), 8);
-        VERIFY_INSERTED(2, 3);
-        VERIFY_NOT_REMOVED;
-
-        int i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Opened);
-        {
-            COMPARE_ROW(i++, "All", Leaf);
-            COMPARE_ROW(i++, "Playlists", Leaf);
-        }
-        COMPARE_ROW(i++, "Music", Closed);
-        COMPARE_ROW(i++, "Network", Closed);
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
-
-        QVERIFY(m_model->setData(m_model->index(0), true, NavigationModel::EXPANDED));
-
-        QCOMPARE(m_model->rowCount(), 6);
-        VERIFY_NOT_INSERTED;
-        VERIFY_REMOVED(2, 3);
-
-        i = 0;
-        COMPARE_ROW(i++, "Home", Leaf);
-        COMPARE_ROW(i++, "Video", Closed);
-        COMPARE_ROW(i++, "Music", Closed);
-        COMPARE_ROW(i++, "Network", Closed);
-        COMPARE_ROW(i++, "Playlists", Leaf);
-        COMPARE_ROW(i++, "Recent", Leaf);
-    }
-
 
 private:
     std::unique_ptr<VLCTestingEnv> m_env;
