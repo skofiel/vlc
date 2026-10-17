@@ -1297,7 +1297,7 @@ FocusScope {
         bottomPadding: VLCStyle.applicationVerticalMargin + VLCStyle.margin_xsmall
 
         textPosition: (MainCtx.pinVideoControls)
-                      ? ControlBar.TimeTextPosition.LeftRightSlider
+                      ? ControlBar.TimeTextPosition.Inline
                       : ControlBar.TimeTextPosition.AboveSlider
 
         // hide right text so that it won't overlap with play queue

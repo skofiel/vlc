@@ -36,6 +36,10 @@ FocusScope {
 
     property int identifier: -1
 
+    // items shown between the left and the right controls, filling the
+    // width, when there is no center control (e.g. the time and the slider)
+    property list<Item> inlineItems
+
     readonly property PlayerControlbarModel model: {
         if (!!MainCtx.controlbarProfileModel.currentModel)
             return MainCtx.controlbarProfileModel.currentModel.getModel(identifier)
@@ -117,7 +121,21 @@ FocusScope {
                 }
             }
 
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.leftMargin: playerControlLayout.layoutSpacing - playerControlLayout.spacing
+                Layout.rightMargin: Layout.leftMargin
+
+                visible: playerControlLayout.inlineItems.length > 0
+
+                spacing: VLCStyle.margin_small
+
+                children: playerControlLayout.inlineItems
+            }
+
             Item {
+                visible: playerControlLayout.inlineItems.length === 0
+
                 function containsVisibleItem(repeater) {
                     for (let i = 0; i < repeater.count; ++i) {
                         const item = repeater.itemAt(i)
@@ -133,7 +151,6 @@ FocusScope {
                                                                                                                : 0
 
                 Layout.fillWidth: true
-                visible: true
             }
 
             ControlRepeater {
