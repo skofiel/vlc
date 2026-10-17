@@ -992,6 +992,7 @@ FocusScope {
         title: Player.title
 
         pinControls: MainCtx.pinVideoControls
+        resumeVisible: resumeDialog.visible
 
         showCSD: MainCtx.clientSideDecoration && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
         showToolbar: MainCtx.hasToolbarMenu && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
@@ -1312,6 +1313,30 @@ FocusScope {
             right: parent.right
             margins: VLCStyle.margin_large
         }
+    }
+
+    ResumeDialog {
+        id: resumeDialog
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: controlBar.top
+        anchors.bottomMargin: VLCStyle.margin_large
+
+        width: Math.min(implicitWidth, parent.width - 2 * VLCStyle.margin_large)
+
+        z: 1
+
+        colorContext.palette: windowTheme.palette
+
+        Navigation.parentItem: rootPlayer
+        Navigation.downItem: controlBar
+
+        onHidden: {
+            if (activeFocus)
+                controlBar.forceActiveFocus(Qt.OtherFocusReason)
+        }
+
+        onVisibleChanged: rootPlayer.lockUnlockAutoHide(visible)
     }
 
     ControlBar {
