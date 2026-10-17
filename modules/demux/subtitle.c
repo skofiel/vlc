@@ -914,10 +914,11 @@ static int Demux( demux_t *p_demux )
 
 static int subtitle_cmp( const void *first, const void *second )
 {
-    vlc_tick_t result = ((subtitle_t *)(first))->i_start - ((subtitle_t *)(second))->i_start;
-    /* Return -1, 0 ,1, and not directly subtraction
-     * as result can be > INT_MAX */
-    return result == 0 ? 0 : result > 0 ? 1 : -1;
+    const vlc_tick_t a = ((const subtitle_t *)first)->i_start;
+    const vlc_tick_t b = ((const subtitle_t *)second)->i_start;
+    /* Compare instead of subtracting: the start times come from the file,
+     * and their difference can overflow */
+    return (a > b) - (a < b);
 }
 /*****************************************************************************
  * Fix: fix time stamp and order of subtitle
