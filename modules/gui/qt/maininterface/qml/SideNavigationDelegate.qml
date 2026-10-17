@@ -104,18 +104,6 @@ T.ItemDelegate {
         border.color: visualFocus ? theme.visualFocus : "transparent"
 
         radius: control.radius
-
-        Widgets.CurrentIndicator {
-            anchors {
-                left: parent.left
-                leftMargin: VLCStyle.margin_xxxsmall
-                verticalCenter: parent.verticalCenter
-            }
-            implicitHeight: parent.height / 2
-            visible: control.checked
-
-            radius: control.radius / 2
-        }
     }
 
     contentItem: RowLayout {
@@ -137,7 +125,8 @@ T.ItemDelegate {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
 
-                color: (control.highlighted || control.checked) ? theme.accent : theme.fg.primary
+                // the current page is shown in the accent color (and in bold)
+                color: (control.highlighted || control.checked) ? theme.accent : theme.fg.secondary
 
                 font.pixelSize: VLCStyle.icon_banner
             }
@@ -153,7 +142,7 @@ T.ItemDelegate {
 
             verticalAlignment: Text.AlignVCenter
 
-            color: control.checked ? theme.fg.secondary : theme.fg.primary
+            color: (control.highlighted || control.checked) ? theme.accent : theme.fg.secondary
 
             elide: Text.ElideRight
 
@@ -161,7 +150,7 @@ T.ItemDelegate {
 
             font.pixelSize: VLCStyle.fontSize_normal
 
-            font.weight: control.checked ? Font.DemiBold : Font.Normal
+            font.weight: (control.highlighted || control.checked) ? Font.DemiBold : Font.Normal
 
             //button text is already exposed
             Accessible.ignored: true

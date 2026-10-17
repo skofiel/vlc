@@ -111,6 +111,8 @@ T.Page {
 
     header: DefaultPageHeader {
         text: root.title
+        path: root.pagePrefix
+        count: root._firstChild?.model?.count ?? -1
 
         leftPadding: VLCStyle.dynamicAppMargins(width) + VLCStyle.layout_left_margin + root.leftPadding
         rightPadding: VLCStyle.dynamicAppMargins(width) + VLCStyle.layout_right_margin + root.rightPadding
@@ -135,7 +137,11 @@ T.Page {
         id: defaultPageHeader
 
         // Properties
-        property alias text: label.text
+        property alias text: breadcrumbs.title
+        property alias path: breadcrumbs.path
+
+        // number of items of the view, -1 when unknown
+        property int count: -1
 
         property alias sortMenu: gridSortFilter.sortMenu
 
@@ -170,6 +176,19 @@ T.Page {
 
         background: Rectangle {
             color: theme.bg.primary
+
+            // separates the header from the view
+            Rectangle {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.leftMargin: defaultPageHeader.leftPadding
+                anchors.rightMargin: defaultPageHeader.rightPadding
+
+                height: VLCStyle.margin_xxxsmall
+
+                color: theme.separator
+            }
         }
 
         RowLayout {
@@ -177,12 +196,54 @@ T.Page {
 
             anchors.fill: parent
 
-            SubtitleLabel {
-                id: label
+            spacing: VLCStyle.margin_xsmall
+
+            IconToolButton {
+                id: backButton
+
+                text: VLCIcons.back
+                description: qsTr("Back")
+
+                enabled: !History.previousEmpty
+
+                onClicked: History.previous(Qt.MouseFocusReason)
+
+                Navigation.parentItem: defaultPageHeader
+                Navigation.rightItem: forwardButton
+            }
+
+            IconToolButton {
+                id: forwardButton
+
+                text: VLCIcons.back
+                description: qsTr("Forward")
+
+                // the same arrow, pointing forward
+                rotation: 180
+
+                enabled: !History.nextEmpty
+
+                onClicked: History.next(Qt.MouseFocusReason)
+
+                Navigation.parentItem: defaultPageHeader
+                Navigation.leftItem: backButton
+                Navigation.rightItem: gridSortFilter
+            }
+
+            Breadcrumbs {
+                id: breadcrumbs
 
                 Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.leftMargin: VLCStyle.margin_xsmall
+            }
 
-                color: theme.fg.primary
+            CaptionLabel {
+                visible: defaultPageHeader.count >= 0
+
+                // VLC translates qsTr(singular, plural, n) with ngettext
+                text: qsTr("%n item", "%n items", defaultPageHeader.count)
+                color: theme.fg.secondary
             }
 
             GridSortFilterControls {
@@ -191,6 +252,7 @@ T.Page {
                 sort: _sortCtx
                 search: _searchCtx
                 Navigation.parentItem: defaultPageHeader
+                Navigation.leftItem: forwardButton
             }
         }
     }

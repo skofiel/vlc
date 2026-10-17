@@ -38,8 +38,11 @@ Widgets.PageLoader {
     // Settings
 
     pageModel: [{
-        name: "home",
+        name: "index",
         default: true,
+        component: indexComponent
+    }, {
+        name: "home",
         component: browseHome
     }, {
         name: "folders",
@@ -100,6 +103,51 @@ Widgets.PageLoader {
     }
 
     // Children
+
+    // index of the network view: network streams, local network and services
+    Component {
+        id: indexComponent
+
+        Widgets.CategoryListPage {
+            title: qsTr("Network")
+
+            categories: {
+                const categories = [
+                    { icon: VLCIcons.add, text: qsTr("Add Network Stream"), path: [...root.pagePrefix, "url"] },
+                    { icon: VLCIcons.topbar_network, text: qsTr("Browse"), path: [...root.pagePrefix, "home"] }
+                ]
+
+                for (let i = 0; i < sourcesModel.count; ++i) {
+                    const source = sourcesModel.getDataAt(i)
+
+                    // the "Add a service" entry goes last
+                    if (source.type !== NetworkSourcesModel.TYPE_DUMMY) {
+                        categories.push({ icon: VLCIcons.stream, text: source.long_name,
+                                          path: [...root.pagePrefix, "services", "source_root"],
+                                          properties: { source_name: source.name } })
+                    }
+                }
+
+                categories.push({ icon: VLCIcons.add, text: qsTr("Add a service"),
+                                  path: [...root.pagePrefix, "services", "services_manage"] })
+                return categories
+            }
+
+            onActivated: (category, reason) => {
+                if (category.properties)
+                    History.push(category.path, category.properties, reason)
+                else
+                    History.push(category.path, reason)
+            }
+
+            NetworkSourcesModel {
+                id: sourcesModel
+
+                ctx: MainCtx
+            }
+        }
+    }
+
     Component {
         id: browseHome
 

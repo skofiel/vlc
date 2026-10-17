@@ -1313,6 +1313,8 @@ libqml_module_widgets_a_QML = \
 	widgets/qml/ActionButtonPrimary.qml \
 	widgets/qml/BannerTabButton.qml \
 	widgets/qml/BannerCone.qml \
+	widgets/qml/Breadcrumbs.qml \
+	widgets/qml/CategoryListPage.qml \
 	widgets/qml/BusyIndicatorExt.qml \
 	widgets/qml/CaptionLabel.qml \
 	widgets/qml/CheckButton.qml \
