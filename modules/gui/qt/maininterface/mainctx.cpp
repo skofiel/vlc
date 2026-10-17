@@ -129,6 +129,15 @@ bool loadVLCOption<bool>(vlc_object_t *obj, const char *name)
     return var_InheritBool(obj, name);
 }
 
+template <>
+QString loadVLCOption<QString>(vlc_object_t *obj, const char *name)
+{
+    char *value = var_InheritString(obj, name);
+    QString ret = qfu(value);
+    free(value);
+    return ret;
+}
+
 }
 
 MainCtx::MainCtx(qt_intf_t *_p_intf)
@@ -456,6 +465,8 @@ void MainCtx::loadPrefs(const bool callSignals)
     loadFromVLCOption(m_safeArea, "qt-safe-area", &MainCtx::safeAreaChanged);
 
     loadFromVLCOption(m_mouseHideTimeout, "mouse-hide-timeout", &MainCtx::mouseHideTimeoutChanged);
+
+    loadFromVLCOption(m_accentColor, "qt-accent-color", &MainCtx::accentColorChanged);
 }
 
 void MainCtx::loadFromSettingsImpl(const bool callSignals)
@@ -616,6 +627,19 @@ void MainCtx::setHasToolbarMenu( bool hasToolbarMenu )
     config_PutInt("qt-menubar", (int) hasToolbarMenu);
 
     emit hasToolbarMenuChanged();
+}
+
+void MainCtx::setAccentColor(const QString &accentColor)
+{
+    if (m_accentColor == accentColor)
+        return;
+
+    m_accentColor = accentColor;
+
+    config_PutPsz("qt-accent-color", qtu(accentColor));
+    config_SaveConfigFile(p_intf);
+
+    emit accentColorChanged();
 }
 
 void MainCtx::setPinVideoControls(bool pinVideoControls)
