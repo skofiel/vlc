@@ -59,12 +59,6 @@ ModalDialog {
         { key: "extensions", icon: VLCIcons.add }
     ]
 
-    // accent colors offered by the settings and the welcome wizard
-    readonly property var _accentColors: [
-        "#FF8800", "#E5413B", "#C9A227", "#2EA043", "#1FA2B4",
-        "#2F6FED", "#8E44EC", "#D63AAF", "#9E9E9E"
-    ]
-
     readonly property bool _searching: searchField.text.trim() !== ""
 
     onClosed: settingsModel.save()
@@ -456,7 +450,7 @@ ModalDialog {
             id: accentComponent
 
             AccentColorChoice {
-                colors: root._accentColors
+                colors: MainCtx.accentColorPresets
                 value: row.value
                 onSelected: (value) => row.setValue(value)
                 Accessible.name: row.text

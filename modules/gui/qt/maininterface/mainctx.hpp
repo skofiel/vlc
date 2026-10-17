@@ -122,6 +122,8 @@ class MainCtx : public QObject
     Q_PROPERTY(bool pinVideoControls READ pinVideoControls WRITE setPinVideoControls NOTIFY pinVideoControlsChanged FINAL)
     // value of qt-accent-color: "default", "system" or a color (e.g. "#FF8800")
     Q_PROPERTY(QString accentColor READ accentColor WRITE setAccentColor NOTIFY accentColorChanged FINAL)
+    // accent colors offered to the user, the first one is the default accent
+    Q_PROPERTY(QStringList accentColorPresets READ accentColorPresets CONSTANT FINAL)
     Q_PROPERTY(float pinOpacity READ pinOpacity WRITE setPinOpacity NOTIFY pinOpacityChanged FINAL)
     Q_PROPERTY(ControlbarProfileModel* controlbarProfileModel READ controlbarProfileModel CONSTANT FINAL)
     Q_PROPERTY(bool hasAcrylicSurface READ hasAcrylicSurface NOTIFY hasAcrylicSurfaceChanged FINAL)
@@ -251,6 +253,7 @@ public:
 
     inline bool pinVideoControls() const { return m_pinVideoControls; }
     inline QString accentColor() const { return m_accentColor; }
+    static QStringList accentColorPresets();
     inline float pinOpacity() const { return m_pinOpacity; }
 
     inline ControlbarProfileModel* controlbarProfileModel() const { return m_controlbarProfileModel; }

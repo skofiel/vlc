@@ -629,6 +629,16 @@ void MainCtx::setHasToolbarMenu( bool hasToolbarMenu )
     emit hasToolbarMenuChanged();
 }
 
+QStringList MainCtx::accentColorPresets()
+{
+    // orange, red, mustard, green, teal, blue, purple, magenta, grey
+    return {
+        QStringLiteral("#FF8800"), QStringLiteral("#E5413B"), QStringLiteral("#C9A227"),
+        QStringLiteral("#2EA043"), QStringLiteral("#1FA2B4"), QStringLiteral("#2F6FED"),
+        QStringLiteral("#8E44EC"), QStringLiteral("#D63AAF"), QStringLiteral("#9E9E9E"),
+    };
+}
+
 void MainCtx::setAccentColor(const QString &accentColor)
 {
     if (m_accentColor == accentColor)

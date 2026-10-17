@@ -53,6 +53,7 @@ private:
     QButtonGroup* colorSchemeGroup = nullptr;
     QButtonGroup* colorSchemeImages = nullptr;
     QButtonGroup* layoutImages = nullptr;
+    QButtonGroup* accentGroup = nullptr;
 
 private slots:
     void finish();
