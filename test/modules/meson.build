@@ -169,6 +169,14 @@ vlc_tests += {
 }
 
 vlc_tests += {
+    'name' : 'test_modules_codec_subsusf',
+    'sources' : files('codec/subsusf.c'),
+    'suite' : ['modules', 'test_modules'],
+    'link_with' : [libvlc, libvlccore],
+    'module_depends' : ['subsusf', 'xml'],
+}
+
+vlc_tests += {
     'name' : 'test_modules_codec_cea708_integration',
     'sources' : files('codec/cea708_integration.c'),
     'suite' : ['modules', 'test_modules'],
