@@ -101,8 +101,9 @@ Widgets.ExpandGridItemView {
                   &&
                   gridView.expandIndex !== gridItem.index) ? 0.7 : 1
 
-        // FIXME: Sometimes MLBaseModel::getDataAt returns {} so we use 'isNew === true'.
-        showNewIndicator: (model.isNew === true)
+        // FIXME: Sometimes MLBaseModel::getDataAt returns {} so we use 'isNew === false'.
+        // A video in progress is not new either, but it is not watched yet.
+        watched: (model.isNew === false) && !(model.progress > 0)
 
         dragItem: gridView.dragItem
 

@@ -46,8 +46,8 @@ Item {
         height: Math.max(progressBar.radius * 2, //to have at least the proper radius applied
                          parent.height + radius) //the top radius section should be always clipped
 
-        //FIXME do we want it always white or do we want it to change with the theme
-        color: "white"
+        // track of the slider color set (black in the dark theme)
+        color: theme.bg.primary
         radius: progressBar.radius
 
         gradient: Gradient {

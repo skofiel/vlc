@@ -48,6 +48,9 @@ T.ItemDelegate {
     // if the item is selected
     property bool selected: false
 
+    // shows the item as done with (e.g. a watched video)
+    property bool dimmed: false
+
     // Aliases
 
     property alias mediaCover: picture
@@ -359,7 +362,7 @@ T.ItemDelegate {
                 height: implicitHeight
                 color: root.selected
                     ? theme.fg.highlight
-                    : theme.fg.primary
+                    : (root.dimmed ? theme.fg.secondary : theme.fg.primary)
             }
         }
 
