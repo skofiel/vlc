@@ -93,6 +93,7 @@ check_PROGRAMS = \
 	test_modules_demux_timestamps_filter \
 	test_modules_demux_ts_pes \
 	test_modules_playlist_m3u \
+	test_modules_playlist_ram \
 	test_modules_stream_out_pcr_sync \
 	test_modules_stream_out_sdi \
 	test_modules_tls \
@@ -412,6 +413,8 @@ test_modules_demux_ts_pes_SOURCES = modules/demux/ts_pes.c \
 				../modules/demux/mpeg/ts_pes.h
 test_modules_playlist_m3u_SOURCES = modules/demux/playlist/m3u.c
 test_modules_playlist_m3u_LDADD = $(LIBVLCCORE) $(LIBVLC)
+test_modules_playlist_ram_SOURCES = modules/demux/playlist/ram.c
+test_modules_playlist_ram_LDADD = $(LIBVLCCORE) $(LIBVLC)
 
 test_modules_codec_hxxx_helper_SOURCES = modules/codec/hxxx_helper.c \
                                       ../modules/codec/hxxx_helper.c \
