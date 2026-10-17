@@ -402,14 +402,14 @@ T.Pane {
 
                     const pos = mouse.x * root._maxvolpos / width
 
-                    if (pos < 0.25)
-                        volControl.value = 0
-                    else if (pos < 0.75)
-                        volControl.value = 0.5
-                    else if (pos < 1.125)
-                        volControl.value = 1
-                    else
-                        volControl.value = 1.25
+                    // snap to the nearest of 0, 50%, 100% and the maximum volume
+                    const steps = [0, 0.5, 1, root._maxvolpos].filter((v) => v <= root._maxvolpos)
+                    let nearest = steps[0]
+                    for (const step of steps) {
+                        if (Math.abs(step - pos) < Math.abs(nearest - pos))
+                            nearest = step
+                    }
+                    volControl.value = nearest
                 }
 
                 WheelToVLCConverter {
