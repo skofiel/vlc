@@ -427,14 +427,14 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
                     i_bitspersample = 32;
                     break;
                 default:
-                    return VLC_EGENERIC;
+                    goto error;
             }
 
             tk->i_extra = sizeof( WAVEFORMATEX ) +
                           p_input->p_fmt->i_extra + i_extra;
             tk->p_extra = malloc( tk->i_extra );
             if( !tk->p_extra )
-                return VLC_ENOMEM;
+                goto error;
             bo_init( &bo, tk->p_extra, tk->i_extra );
             bo_addle_u16( &bo, tk->i_tag );
             bo_addle_u16( &bo, p_input->p_fmt->audio.i_channels );
@@ -571,7 +571,7 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
             if( !tk->p_extra )
             {
                 free( p_codec_extra );
-                return VLC_ENOMEM;
+                goto error;
             }
             bo_init( &bo, tk->p_extra, tk->i_extra );
             bo_addle_u32( &bo, p_fmt->video.i_width );
@@ -609,16 +609,11 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
         }
         default:
             msg_Err(p_mux, "unhandled track type" );
-            free( tk );
-            return VLC_EGENERIC;
+            goto error;
     }
 
     if( vlc_array_append( &p_sys->tracks, tk ) )
-    {
-        free( tk->p_extra );
-        free( tk );
-        return VLC_EGENERIC;
-    }
+        goto error;
 
     es_format_Copy( &tk->fmt, p_input->p_fmt );
 
@@ -628,6 +623,12 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
         p_sys->b_write_header = true;
 
     return VLC_SUCCESS;
+
+error:
+    free( tk->p_extra );
+    free( tk );
+    p_input->p_sys = NULL;
+    return VLC_EGENERIC;
 }
 
 /*****************************************************************************
@@ -662,6 +663,11 @@ static void DelStream( sout_mux_t *p_mux, sout_input_t *p_input )
     {
         vlc_array_remove( &p_sys->tracks, vlc_array_index_of_item( &p_sys->tracks, tk ) );
         p_sys->b_write_header = true;
+
+        /* no longer in the tracks, that are released by Close() */
+        free( tk->p_extra );
+        es_format_Clean( &tk->fmt );
+        free( tk );
     }
 }
 
