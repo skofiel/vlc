@@ -27,6 +27,17 @@
 #include "misc/variables.h"
 
 void
+vlc_player_input_ReleaseMlStates(struct vlc_player_input* input)
+{
+    vlc_ml_playback_states_all_release(&input->ml.states);
+    input->ml.states.current_video_track =
+        input->ml.states.current_audio_track =
+        input->ml.states.current_subtitle_track = NULL;
+    input->ml.states.aspect_ratio = input->ml.states.crop =
+        input->ml.states.deinterlace = input->ml.states.video_filter = NULL;
+}
+
+void
 vlc_player_input_RestoreMlStates(struct vlc_player_input* input, bool force_pos)
 {
     vlc_player_t* player = input->player;
@@ -47,6 +58,8 @@ vlc_player_input_RestoreMlStates(struct vlc_player_input* input, bool force_pos)
     vlc_ml_media_t* media = vlc_ml_get_media_by_mrl( ml, item->psz_uri);
     if (!media)
         return;
+    /* The states may have been restored already (when asked by the user) */
+    vlc_player_input_ReleaseMlStates(input);
     if (media->i_type != VLC_ML_MEDIA_TYPE_VIDEO ||
         vlc_ml_media_get_all_playback_pref(ml, media->i_id,
                                            &input->ml.states) != VLC_SUCCESS)
@@ -288,7 +301,7 @@ vlc_player_UpdateMLStates(vlc_player_t *player, struct vlc_player_input* input)
 
     vlc_ml_media_set_all_playback_states(ml, media->i_id, &input->ml.states);
 
-    vlc_ml_release(&input->ml.states);
+    vlc_player_input_ReleaseMlStates(input);
     vlc_ml_release(media);
 }
 

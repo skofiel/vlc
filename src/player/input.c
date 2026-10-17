@@ -1369,6 +1369,9 @@ vlc_player_input_Delete(struct vlc_player_input *input)
     vlc_vector_destroy(&input->audio_track_vector);
     vlc_vector_destroy(&input->spu_track_vector);
 
+    /* Not released by vlc_player_UpdateMLStates() on its early returns */
+    vlc_player_input_ReleaseMlStates(input);
+
     input_Close(input->thread);
     free(input);
 }
