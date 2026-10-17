@@ -198,7 +198,7 @@ ColumnLayout {
         wheelEnabled: true
 
         toolTipTextProvider: function (value) {
-            return sliderToSpeed(value).toFixed(2)
+            return Helpers.formatNumber(sliderToSpeed(value), 2)
         }
 
         toolTipFollowsMouse: true

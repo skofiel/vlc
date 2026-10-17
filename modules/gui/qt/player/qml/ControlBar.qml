@@ -213,7 +213,7 @@ T.Pane {
 
                         return qsTr("%1 (%2x)")
                             .arg(adjustedRemainingTime.formatHMS())
-                            .arg(+Player.rate.toFixed(2))
+                            .arg(Helpers.formatNumber(Player.rate, 2))
                     }
 
                     x: (parent.width - width) / 2
