@@ -181,6 +181,10 @@ QtObject {
         return height / 2
     }
 
+    // play/pause pill of the control bar
+    readonly property int play_pill_width: MainCtx.dp(54, scale)
+    readonly property int play_pill_height: MainCtx.dp(30, scale)
+
     //button
     readonly property int button_width_small: MainCtx.dp(64, scale)
     readonly property int button_width_normal: MainCtx.dp(96, scale)
