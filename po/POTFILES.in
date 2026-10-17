@@ -839,6 +839,8 @@ modules/gui/qt/player/qml/MiniPlayer.qml
 modules/gui/qt/player/qml/PIPPlayer.qml
 modules/gui/qt/player/qml/TracksPage.qml
 modules/gui/qt/playlist/playlist_controller_p.hpp
+modules/gui/qt/widgets/qml/CSDThemeButton.qml
+modules/gui/qt/widgets/qml/CSDWindowButtonSet.qml
 modules/gui/qt/widgets/qml/EmptyLabelButton.qml
 modules/gui/qt/widgets/qml/EmptyLabel.qml
 modules/gui/qt/medialibrary/mlbookmarkmodel.cpp
