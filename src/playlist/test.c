@@ -2418,6 +2418,35 @@ test_sort_optional_integers(void)
 }
 
 static void
+test_sort_file_size(void)
+{
+    vlc_playlist_t *playlist = vlc_playlist_New(NULL, VLC_PLAYLIST_PREPARSING_DISABLED, 0, 0);
+    assert(playlist);
+
+    input_item_t *media[3];
+    CreateDummyMediaArray(media, 3);
+
+    /* the file size is not known for media[1] (a stream for example) */
+    input_item_AddStat(media[0], "size", 300);
+    input_item_AddStat(media[2], "size", 100);
+
+    int ret = vlc_playlist_Append(playlist, media, 3);
+    assert(ret == VLC_SUCCESS);
+
+    struct vlc_playlist_sort_criterion criterion =
+        { VLC_PLAYLIST_SORT_KEY_FILE_SIZE, VLC_PLAYLIST_SORT_ORDER_ASCENDING };
+    ret = vlc_playlist_Sort(playlist, &criterion, 1);
+    assert(ret == VLC_SUCCESS);
+
+    EXPECT_AT(0, 1);
+    EXPECT_AT(1, 2);
+    EXPECT_AT(2, 0);
+
+    DestroyMediaArray(media, 3);
+    vlc_playlist_Delete(playlist);
+}
+
+static void
 test_stable_sort(void)
 {
     vlc_playlist_t *playlist = vlc_playlist_New(NULL, VLC_PLAYLIST_PREPARSING_DISABLED, 0, 0);
@@ -2529,6 +2558,7 @@ int main(void)
     test_sort();
     test_stable_sort();
     test_sort_optional_integers();
+    test_sort_file_size();
     return 0;
 }
 
