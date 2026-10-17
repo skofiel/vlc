@@ -1104,6 +1104,8 @@ T.Button {
 En `Bookmarks.qml`, añadir `Accessible.name: model.name`.
 
 #### A11Y‑02: en las tablas no se puede abrir el menú contextual con el teclado
+
+> **Corrección (fase 2):** la tecla Menú sí funciona cuando la fila tiene el foco de teclado (`TableViewDelegateExt.qml:115`). Lo que se mantiene es lo demás: el botón «…» solo era visible con el ratón y Mayús+F10 no está atendido. Ver la sección 7.2.
 - **Ubicación:** `modules/gui/qt/widgets/qml/TableViewDelegateExt.qml:306‑344`
 - **Severidad:** Alta · **Confianza:** Alta
 
@@ -1715,6 +1717,53 @@ Rama `claude/wonderful-pascal-entcah`, sobre `master` (`4953f0b`). Validado con 
 | Fuzzing de listas | `388ee42` test: demux-run: allow fuzzing the playlist demuxers | Variable `VLC_TARGET_URL` y llamada a `readdir`. **Con un `.b4s` mínimo ya reproduce SEC‑03** (SEGV en `b4s.c:189`) |
 
 **Tests que fallan en el entorno de validación sin relación con estos cambios:** `http_tunnel_test`, `test_qt_renderer_manager`, `test_qt_dialog_model` y `test_libvlc_media_player_record` dan fugas con LeakSanitizer; `test_src_preparser_thumbnail_to_files` falla por falta de formato PNG; `test_src_media_source` y `test_libvlc_media_discoverer` fallan porque no hay `plugins.dat`; `test_modules_codec_hxxx_helper` da un aviso de UBSan. `test_src_media_source` se comprobó también sin los cambios, y falla igual.
+
+**Fase 2: hecha**, con las reservas que se indican después de la tabla.
+
+| Hallazgo | Commit | Validación |
+|---|---|---|
+| (infraestructura) | `02f8e7f` src: meson: build and run the playlist unit test | `test_playlist` solo existía en autotools; ahora también se ejecuta con Meson |
+| CORE‑05 | `7f78971` playlist: keep playing the next item when removing the current one | Test `test_remove_current`. **Sin el arreglo, falla** (`current == -1` en lugar de 1) |
+| CORE‑06 | `41d2426` playlist: sort: fix comparison of optional integers | Test `test_sort_optional_integers`. **Sin el arreglo, falla** |
+| CORE‑07 | `d40847a` playlist: sort: handle items without file size or modification date | Test `test_sort_file_size` |
+| CORE‑08 | `0617055` player: fix the vlc_player_New() error path | Compila. Sin test automático, porque haría falta inyectar fallos |
+| SEC‑02 | `6221d58` codec: subsusf: ignore styles without name | Test nuevo `test_modules_codec_subsusf`. **Sin el arreglo, falla** (UBSan: puntero nulo en `strcasecmp`) |
+| SEC‑03 | `4b77b5e` demux: playlist: b4s: ignore entries without Playstring | Test `test_modules_playlist_parsers` (antes `..._ram`). **Sin el arreglo, falla** |
+| SEC‑04 | `3e7159c` demux: playlist: xspf: limit the track id | Medido con `vlc-demux-run`: una lista de 343 bytes pasaba de **1,8 GB y 7,5 s** a 0,27 s |
+| QT‑03 | `28bff7f` qt: mediatreelistener: remove the listener before destroying the callback | Compila. Sin test automático |
+| QT‑04 | `697beae` qt: networkdevicemodel: fix the removal of device sources | Compila. Sin test automático |
+| QT‑05 | `930c6f8` qt: dialogmodel: set the provider and the shutdown flag with the lock | `test_qt_dialog_model` pasa; solo queda su fuga, que ya existía |
+| QT‑06 | `8baeb26` qt: dialogs: don't open the media information of a missing media | Compila |
+| QT‑07 | `e372272` qt: medialib: skip unavailable medias when playing a collection | Compila |
+| QT‑08 | `d3552f3` qt: video_window_handler: don't keep a dangling screen pointer | Compila |
+| QT‑12 | `5d05e2d` qml: fix the swapped previous/next frame controls | `qmllint` |
+| A11Y‑01 | `5d22cb9` qml: give an accessible name to the window and bookmark buttons | `qmllint` y `potfiles` (que detectó los dos QML nuevos con cadenas) |
+| A11Y‑02 | `c3b3005` qml: show the context menu button of table rows with the keyboard focus | `qmllint`. Ver la corrección de A11Y‑02 más abajo |
+| A11Y‑05 y QT‑13 | `7b2248a` qt: fix the contrast of the palettes | Test `contrast` **sin problemas conocidos**. Las funciones `withContrast()` y `textColorOn()` dan el mismo resultado en C++ (Qt) y en el comprobador (±1 por canal), también con acentos personalizados |
+| A11Y‑07 | `a08c907` qml: mirror the interface with right-to-left languages | Probado con la interfaz real en Xvfb y la dirección RTL forzada: la interfaz se refleja, pero la barra de reproducción no (se mantiene de izquierda a derecha, que es lo habitual en reproductores). Se arregló `SplitButton`, que se rompía al reflejarse |
+| **Nuevo** | `aab2c23` qt: fix use after scope in the cached graphics api setup | **Encontrado por ASan al arrancar la interfaz real**: a partir del segundo arranque, una lambda encolada usaba variables locales ya destruidas (`qt.cpp:1175`). Ya no aparece |
+
+**Reservas de la fase 2:**
+- **No se ha hecho la revisión con NVDA u Orca** que pedía el criterio de salida, porque el entorno no tiene lector de pantalla. Lo comprobado es el código, `qmllint` y las capturas en Xvfb.
+- **Corrección de A11Y‑02:** el delegado de las tablas **sí** atiende la tecla Menú cuando la fila tiene el foco (`Keys.menuPressed.connect(contextButton.clicked)`). Lo que sigue siendo cierto es que el botón «…» solo se veía con el ratón; ya está corregido. Falta, para una fase posterior, atender Mayús+F10, la alternativa a la tecla Menú en portátiles.
+- **Pendiente de A11Y‑07:** en RTL, los iconos direccionales (como la flecha «atrás») no se invierten.
+- **Proveedores de tema:** los de GTK y Windows toman los colores del tema del sistema, así que su contraste depende de ese tema. El proveedor «Qt básico» sí está corregido.
+
+**Batería completa tras la fase 2:** pasan 103 tests y fallan los mismos 8 ajenos de antes.
+
+### 7.3 Icono de la aplicación
+
+Commit `2f45fdd` (icons: new application icon). A petición del propietario, el icono de VLC (el cono) se sustituye por un «play» de tres trazos entrelazados, redibujado en vectorial a partir de la propuesta inicial:
+- triángulo equilátero con trazos de grosor constante que comparten centro en cada vértice, así que el contorno ya no tiene escalones;
+- trazos más finos, para que el hueco se mantenga abierto a 16 px;
+- tres tonos derivados del acento `#FF8800` y una sombra suave en los cruces;
+- centrado óptico en un lienzo cuadrado.
+
+Fuentes y generación:
+- `extras/misc/app-icon/generate.py` escribe tres SVG: `share/icons/vlc.svg`, la baldosa de macOS y la variante plana de la interfaz (`cone.svg`, que sigue el color de acento).
+- `extras/misc/app-icon/render.sh` genera los PNG, XPM, ICO e ICNS.
+
+Las variantes estacionales (Navidad, 1 de abril) usan el mismo icono hasta que haya diseños propios. Los paquetes `VLC.icon` y `VLC-Dev.icon` de Icon Composer (macOS 26) no se han actualizado: necesitan Icon Composer en un Mac.
 
 ---
 
