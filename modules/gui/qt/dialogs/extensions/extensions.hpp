@@ -28,6 +28,7 @@
 #include <cassert>
 #include <unordered_set>
 #include <QHash>
+#include <QRecursiveMutex>
 
 #include <QDialog>
 class QObject;
@@ -57,14 +58,24 @@ public:
     ExtensionsDialogProvider( qt_intf_t *p_intf = nullptr);
     virtual ~ExtensionsDialogProvider();
 
-    void UpdateExtDialog( extension_dialog_t *p_dialog );
+    // called from the extension threads
+    void QueueUpdate( extension_dialog_t *p_dialog );
 
 private:
+    // returns whether the dialog is killed
+    bool UpdateExtDialog( extension_dialog_t *p_dialog );
     ExtensionDialog* CreateExtDialog( extension_dialog_t *p_dialog );
     int DestroyExtDialog( extension_dialog_t *p_dialog );
 
     std::unordered_set<ExtensionDialog*> m_dialogs;
     qt_intf_t *p_intf = nullptr;
+
+    // The extension dialogs that may be updated: an extension deletes a
+    // dialog without waiting for the interface when it has not created it
+    // yet, so the queued updates of a deleted dialog must be ignored.
+    // recursive: the updates may be nested in the interface thread
+    QRecursiveMutex m_liveLock;
+    std::unordered_set<extension_dialog_t*> m_liveDialogs;
 };
 
 
