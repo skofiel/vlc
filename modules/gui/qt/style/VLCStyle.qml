@@ -181,6 +181,10 @@ QtObject {
         return height / 2
     }
 
+    // seek bar of the control bar
+    readonly property int seekBar_height: MainCtx.dp(14, scale)
+    readonly property int seekBar_handleWidth: MainCtx.dp(5, scale)
+
     // play/pause pill of the control bar
     readonly property int play_pill_width: MainCtx.dp(54, scale)
     readonly property int play_pill_height: MainCtx.dp(30, scale)
