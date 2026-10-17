@@ -322,7 +322,7 @@ CompareOptionalIntegers(bool has_a, int64_t a, bool has_b, int64_t b)
     if (!has_a && !has_b)
         return 0;
 
-    return a ? 1 : -1;
+    return has_a ? 1 : -1;
 }
 
 static inline int

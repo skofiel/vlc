@@ -2387,6 +2387,37 @@ test_sort(void)
 }
 
 static void
+test_sort_optional_integers(void)
+{
+    vlc_playlist_t *playlist = vlc_playlist_New(NULL, VLC_PLAYLIST_PREPARSING_DISABLED, 0, 0);
+    assert(playlist);
+
+    input_item_t *media[4];
+    CreateDummyMediaArray(media, 4);
+
+    /* a disc number "0" must not be considered as missing */
+    input_item_SetDiscNumber(media[0], "0");
+    input_item_SetDiscNumber(media[2], "2");
+
+    int ret = vlc_playlist_Append(playlist, media, 4);
+    assert(ret == VLC_SUCCESS);
+
+    struct vlc_playlist_sort_criterion criterion =
+        { VLC_PLAYLIST_SORT_KEY_DISC_NUMBER, VLC_PLAYLIST_SORT_ORDER_ASCENDING };
+    ret = vlc_playlist_Sort(playlist, &criterion, 1);
+    assert(ret == VLC_SUCCESS);
+
+    /* items without disc number first, in their initial order */
+    EXPECT_AT(0, 1);
+    EXPECT_AT(1, 3);
+    EXPECT_AT(2, 0);
+    EXPECT_AT(3, 2);
+
+    DestroyMediaArray(media, 4);
+    vlc_playlist_Delete(playlist);
+}
+
+static void
 test_stable_sort(void)
 {
     vlc_playlist_t *playlist = vlc_playlist_New(NULL, VLC_PLAYLIST_PREPARSING_DISABLED, 0, 0);
@@ -2497,6 +2528,7 @@ int main(void)
     test_shuffle();
     test_sort();
     test_stable_sort();
+    test_sort_optional_integers();
     return 0;
 }
 
