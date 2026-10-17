@@ -167,13 +167,14 @@ static void read_head( stream_t* p_demux, input_item_t* p_input )
 static void read_body( stream_t* p_demux, input_item_node_t* p_node )
 {
     xml_reader_t *p_reader = p_demux->p_sys;
-    const char* psz_name;
+    const char* psz_name = NULL;
     int i_type;
 
     i_type = xml_ReaderNextNode( p_reader, &psz_name );
     if ( i_type != XML_READER_STARTELEM || strcasecmp( psz_name, "seq" ) )
     {
-        msg_Err( p_demux, "Expected opening <seq> tag. Got <%s> with type %d", psz_name, i_type );
+        msg_Err( p_demux, "Expected opening <seq> tag. Got <%s> with type %d",
+                 i_type > 0 ? psz_name : "(eof)", i_type );
         return;
     }
 
@@ -224,7 +225,8 @@ static void read_body( stream_t* p_demux, input_item_node_t* p_node )
 
     i_type = xml_ReaderNextNode( p_reader, &psz_name );
     if ( i_type != XML_READER_ENDELEM || strcasecmp( psz_name, "body" ) )
-        msg_Err( p_demux, "Expected closing <body> tag. Got: <%s> with type %d", psz_name, i_type );
+        msg_Err( p_demux, "Expected closing <body> tag. Got: <%s> with type %d",
+                 i_type > 0 ? psz_name : "(eof)", i_type );
 }
 
 static int Demux( stream_t* p_demux, input_item_node_t *p_node )
