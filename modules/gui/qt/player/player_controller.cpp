@@ -2259,6 +2259,43 @@ int PlayerController::AddAssociatedMedia(es_format_category_e cat, const QString
     }
 
 
+QString PlayerController::getVideoTransform() const
+{
+    Q_D(const PlayerController);
+    return d->m_videoTransform;
+}
+
+void PlayerController::setVideoTransform( const QString& transform )
+{
+    Q_D(PlayerController);
+    if (d->m_videoTransform == transform)
+        return;
+
+    d->m_videoTransform = transform;
+
+    // as the extended video settings, apply the filter on the fly
+    for (const SharedVOutThread& vout : getVouts())
+    {
+        char* chain = var_GetString( vout.get(), "video-filter" );
+        QStringList filters = qfu( chain ? chain : "" ).split( ':', Qt::SkipEmptyParts );
+        free( chain );
+
+        filters.removeAll( QStringLiteral("transform") );
+        // remove the filter first, so that it is created again with the new type
+        var_SetString( vout.get(), "video-filter", qtu( filters.join( ':' ) ) );
+
+        if (!transform.isEmpty())
+        {
+            var_Create( vout.get(), "transform-type", VLC_VAR_STRING );
+            var_SetString( vout.get(), "transform-type", qtu( transform ) );
+            filters << QStringLiteral("transform");
+            var_SetString( vout.get(), "video-filter", qtu( filters.join( ':' ) ) );
+        }
+    }
+
+    emit videoTransformChanged();
+}
+
 QABSTRACTLIST_GETTER( TrackListModel, getVideoTracks, m_videoTracks)
 QABSTRACTLIST_GETTER( TrackListModel, getAudioTracks, m_audioTracks)
 QABSTRACTLIST_GETTER( TrackListModel, getSubtitleTracks, m_subtitleTracks)
