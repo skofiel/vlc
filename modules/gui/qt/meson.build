@@ -1317,6 +1317,14 @@ if qt6_dep.found()
             timeout: 300)
     endif
 
+    test('contrast', prog_python,
+        args: [
+            files('scripts/check_contrast.py'),
+            '--known-issues', files('scripts/contrast_known_issues.txt'),
+            meson.current_source_dir(),
+        ],
+        suite: 'qt')
+
     qtest_qt6_dep = dependency('qt6', version: '=' + qt6_dep.version(), modules: ['Test'], required: false)
     if qtest_qt6_dep.found()
         vlc_tests += {
