@@ -1545,9 +1545,9 @@ Rutas relativas a `modules/gui/qt/`. Los valores están en dp: `VLCStyle.dp(px) 
 
 | Token | Valor | Uso | Implementación |
 |---|---|---|---|
-| `bg.base` | `#121212` | Fondo de la ventana y del reproductor | `makeDarkPalette()`: conjunto `Window`, `Bg.Primary` |
-| `bg.surface` | `#181818` | Barra lateral, barra de controles, cabeceras | Conjuntos `Window`/`MenuBar`, `Bg.Secondary`; fondo de `ControlBar` |
-| `bg.elevated` | `#1E1E1E` | Tarjetas, popups, diálogos, menús | Conjuntos `View`/`Item`/`Tooltip`, `Bg.Primary` (equivale a `darkGrey200`) |
+| `bg.base` | `#121212` | Fondo del contenido | `makeDarkPalette()`: conjunto `View`, `Bg.Primary` (`darkGrey50`) |
+| `bg.surface` | `#181818` | Barra lateral, barra de controles, cabeceras | Conjunto `Window`, `Bg.Primary`/`Bg.Secondary` (`darkGrey100`) |
+| `bg.elevated` | `#1E1E1E` | Tarjetas, popups, diálogos, menús | Conjunto `Tooltip`, `Bg.Primary` (`darkGrey200`) |
 | `accent` | `#FF8800` | Play/pausa, progreso, selección, foco | `orange500` (ya existe). Sustituir los valores fijos de `PlayButton.qml` |
 | `accent.dim` | `#FF8800` con α 0,25 | Parte ya reproducida de la barra de progreso | Nuevo rol `Slider/Fg/Secondary` |
 | `fg.primary` | `#FFFFFF` con α 0,92 | Texto principal | Sobre `#121212` el contraste es ≥ 15:1 |
@@ -1750,6 +1750,23 @@ Rama `claude/wonderful-pascal-entcah`, sobre `master` (`4953f0b`). Validado con 
 - **Proveedores de tema:** los de GTK y Windows toman los colores del tema del sistema, así que su contraste depende de ese tema. El proveedor «Qt básico» sí está corregido.
 
 **Batería completa tras la fase 2:** pasan 103 tests y fallan los mismos 8 ajenos de antes.
+
+**Fase 3: hecha.**
+
+| Tarea | Commit | Validación |
+|---|---|---|
+| Superficies oscuras y tokens de radio (6.1) | `c1af079` qt: palette: dark theme surfaces and radius tokens | Test `contrast`: todos los pares del tema oscuro cumplen (texto ≥ 7:1) |
+| Tema oscuro por defecto | `2359ac2` qt: use the dark color scheme by default | El asistente de primer arranque preselecciona el oscuro, y cancelarlo también lo aplica |
+| Tipografía Inter (6.2) | `63bcce2` qt: bundle the Inter font and use it as the application font | Comprobado en Xvfb con un fontconfig cuya única fuente es DejaVu: con `--no-qt-bundled-font` se usa DejaVu y, por defecto, Inter |
+| `PlayButton` sin colores fijos | `cdb2539` qml: PlayButton: derive the gradient from the accent color | `qmllint`. Con el acento por defecto, el degradado es casi idéntico al anterior |
+
+**Notas de la fase 3:**
+- **Superficies:** en la implementación, la base `#121212` es el contenido (`View`), la superficie `#181818` es la estructura de la ventana (banner, barra lateral y barra de controles, conjunto `Window`) y el nivel elevado `#1E1E1E` son tooltips y desplegables. Así se respeta el orden de profundidad.
+- **Inter:** se usan las instancias estáticas Regular, Medium, SemiBold y Bold, unos 800 KB comprimidos. La variable no sirve: hasta Qt 6.7, Qt no maneja su eje de peso y dibujaba 500 y 600 como regular. Las cifras tabulares (`font.features`) necesitan Qt 6.6 y no se han aplicado, porque el mínimo es 6.2.
+- **Revisión propia:** sospeché un fallo de identificadores en los botones del asistente. Al comprobarlo resultó que `initializePage()` los asigna, así que no era un fallo y no se ha tocado.
+- **Capturas** antes y después con escala 1 y 2, tema oscuro y claro y reproductor, sin errores de ASan.
+
+**Batería completa tras la fase 3:** pasan 103 tests y fallan los mismos 8 ajenos.
 
 ### 7.3 Icono de la aplicación
 
