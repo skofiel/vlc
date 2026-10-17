@@ -246,7 +246,6 @@ QtObject {
 
     readonly property int gridItemSelectedBorder: MainCtx.dp(8, scale)
 
-    readonly property int gridItem_newIndicator: MainCtx.dp(8, scale)
 
     readonly property int column_width: MainCtx.dp(114, scale)
 
@@ -340,7 +339,6 @@ QtObject {
     readonly property url noArtVideoCover: "qrc:///placeholder/noart_videoCover.svg";
 
     // New indicator
-    readonly property url newIndicator: "qrc:///misc/new_indicator.svg";
 
     // ControlBar
 

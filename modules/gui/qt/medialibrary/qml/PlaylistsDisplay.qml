@@ -25,6 +25,7 @@ import VLC.MediaLibrary
 
 import VLC.Widgets as Widgets
 import VLC.Style
+import VLC.Dialogs
 
 Widgets.PageLoader {
     id: root
@@ -70,6 +71,23 @@ Widgets.PageLoader {
 
                 // video and audio playlists
                 playlistType: MLPlaylistListModel.PLAYLIST_TYPE_ALL
+
+                header: Widgets.ButtonExt {
+                    // aligned with the playlists
+                    x: playlistView.contentLeftMargin
+
+                    text: qsTr("Create playlist")
+                    iconTxt: VLCIcons.add
+
+                    onClicked: {
+                        const dialog = DialogsProvider.getTextDialog(null,
+                                                                     qsTr("Create playlist"),
+                                                                     qsTr("Name of the new playlist:"),
+                                                                     qsTr("New playlist"))
+                        if (dialog.ok && dialog.text !== "")
+                            (playlistView.model as MLPlaylistListModel).create(dialog.text, [])
+                    }
+                }
 
                 searchPattern: playlistPage.search.pattern
                 sortOrder: playlistPage.sort.order

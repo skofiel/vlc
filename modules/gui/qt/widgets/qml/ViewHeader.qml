@@ -83,20 +83,28 @@ T.Pane {
 
         anchors.fill: parent
 
+        spacing: VLCStyle.margin_xxsmall
+
+        // "Title ›": the title leads to the whole list as well as the arrow
         SubtitleLabel {
             id: label
 
-            Layout.fillWidth: true
+            Layout.maximumWidth: row.width - button.width - row.spacing
 
             color: theme.fg.primary
+            font.weight: Font.Normal
+
+            TapHandler {
+                enabled: button.visible
+                cursorShape: Qt.PointingHandCursor
+                onTapped: root.seeAllButtonClicked(Qt.MouseFocusReason)
+            }
         }
 
-        TextToolButton {
+        IconToolButton {
             id: button
 
             visible: false
-
-            Layout.preferredWidth: implicitWidth
 
             focus: true
 
@@ -105,13 +113,16 @@ T.Pane {
                 value: root.focusReason
             }
 
-            text: qsTr("See All")
-
-            font.pixelSize: VLCStyle.fontSize_large
+            text: VLCIcons.ic_fluent_chevron_right_24
+            description: qsTr("See All")
 
             Navigation.parentItem: root
 
             onClicked: root.seeAllButtonClicked(focusReason)
+        }
+
+        Item {
+            Layout.fillWidth: true
         }
     }
 }

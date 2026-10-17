@@ -27,8 +27,10 @@ import VLC.Style
 Widgets.GridItem {
     id: root
 
-    property bool showNewIndicator: false
-    
+    // a watched video is dimmed, with a full progress bar
+    property bool watched: false
+
+
     property var labels
 
     function play() {
@@ -37,6 +39,8 @@ Widgets.GridItem {
             MainCtx.playerView = true
         }
     }
+
+    dimmed: watched
 
     image: model.thumbnail || ""
     fallbackImage: VLCStyle.noArtVideoCover
@@ -81,29 +85,16 @@ Widgets.GridItem {
             right: parent.right
         }
 
-        visible: (model.progress > 0)
+        visible: root.watched || (model.progress > 0)
 
         radius: root.pictureRadius
-        value: Helpers.clamp(model.progress !== undefined ? model.progress : 0, 0, 1)
+        value: root.watched ? 1.0
+                            : Helpers.clamp(model.progress !== undefined ? model.progress : 0, 0, 1)
     }
 
     pictureOverlay: Item {
         implicitWidth: root.pictureWidth
         implicitHeight: root.pictureHeight
-
-        Widgets.ScaledImage {
-            id: image
-
-            anchors.right: parent.right
-            anchors.top: parent.top
-
-            width: VLCStyle.gridItem_newIndicator
-            height: width
-
-            visible: root.showNewIndicator
-
-            source: VLCStyle.newIndicator
-        }
 
         Widgets.VideoQualityLabels {
             anchors {

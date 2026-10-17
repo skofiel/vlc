@@ -190,7 +190,7 @@ Widgets.PageExt {
 
             Widgets.ViewHeader {
                 visible: continueWatchingRow.visible
-                text: qsTr("Continue Watching")
+                text: qsTr("Watch Next")
                 view: continueWatchingRow
                 seeAllButton.visible: continueWatchingRow.model.maximumCount > continueWatchingRow.model.count
 
