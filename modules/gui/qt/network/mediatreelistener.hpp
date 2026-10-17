@@ -42,9 +42,11 @@ public:
 
 public:
     MediaTreeListener( MediaTreePtr tree, std::unique_ptr<MediaTreeListenerCb> &&cb );
+    ~MediaTreeListener();
 
-    MediaTreeListener( MediaTreeListener&& ) = default;
-    MediaTreeListener& operator=( MediaTreeListener&& ) = default;
+    // the C listener keeps a pointer to this object
+    MediaTreeListener( MediaTreeListener&& ) = delete;
+    MediaTreeListener& operator=( MediaTreeListener&& ) = delete;
 
     MediaTreeListener( const MediaTreeListener& ) = delete;
     MediaTreeListener& operator=( const MediaTreeListener& ) = delete;
