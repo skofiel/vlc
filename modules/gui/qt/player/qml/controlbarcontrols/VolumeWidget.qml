@@ -79,7 +79,10 @@ T.Pane {
                 else
                     return VLCIcons.volume_high
             }
-            description: qsTr("Mute")
+            description: _player.muted ? qsTr("Unmute") : qsTr("Mute")
+
+            Accessible.checkable: true
+            Accessible.checked: _player.muted
 
             AccessibleCompat.id: "muteButton"
 
