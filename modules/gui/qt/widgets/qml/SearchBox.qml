@@ -172,7 +172,7 @@ FocusScope {
 
                 selectByMouse: true
 
-                placeholderText: qsTr("filter")
+                placeholderText: qsTr("Filter")
 
                 Navigation.parentItem: root
                 Navigation.upItem: root.popBelow ? iconButton : null

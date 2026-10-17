@@ -29,7 +29,7 @@ Widgets.IconToolButton {
     enabled: Player.hasVideoOutput
     text: Player.fullscreen ? VLCIcons.defullscreen :VLCIcons.fullscreen
     onClicked: Player.fullscreen = !Player.fullscreen
-    description: qsTr("fullscreen")
+    description: Player.fullscreen ? qsTr("Exit fullscreen") : qsTr("Fullscreen")
 
     AccessibleCompat.id: "fullscreenButton"
 }

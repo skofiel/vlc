@@ -101,7 +101,7 @@ QString VLCTick::formatLong(int formatFlags) const
                     .arg(min)
                     .arg(sec);
         else
-            return qtr("%1 sec").arg(sec);
+            return qtr("%1 s").arg(sec);
 
     }
     else
@@ -140,7 +140,7 @@ QString VLCTick::formatShort(int formatFlags) const
 
     }
     else
-        return qtr("%1ms").arg(t_ms);
+        return qtr("%1 ms").arg(t_ms);
 }
 
 int VLCTick::toSeconds() const
