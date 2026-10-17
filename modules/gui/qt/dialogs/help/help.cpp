@@ -117,14 +117,22 @@ AboutDialog::AboutDialog( qt_intf_t *_p_intf)
     /* People who wrote the software */
     ui.authorsPage->setText( qfu( psz_authors ) );
 
-    ui.licenseButton->setText( "<html><head/><body><p><span style=\" text-decoration: underline; color:" + linkColor + ";\">"+qtr( "License" )+"</span></p></body></html>");
-    ui.licenseButton->installEventFilter( this );
-
-    ui.authorsButton->setText( "<html><head/><body><p><span style=\" text-decoration: underline; color:" + linkColor + ";\">"+qtr( "Authors" )+"</span></p></body></html>");
-    ui.authorsButton->installEventFilter( this );
-
-    ui.creditsButton->setText( "<html><head/><body><p><span style=\" text-decoration: underline; color:" + linkColor + ";\">"+qtr( "Credits" )+"</span></p></body></html>");
-    ui.creditsButton->installEventFilter( this );
+    /* Buttons that look like links, usable with the keyboard */
+    const auto setupLinkButton = [this, &linkColor]( QPushButton *button,
+                                                     const QString &text,
+                                                     void (AboutDialog::*slot)() ) {
+        button->setText( text );
+        QFont font = button->font();
+        font.setUnderline( true );
+        button->setFont( font );
+        QPalette pal = button->palette();
+        pal.setColor( QPalette::ButtonText, QColor( linkColor ) );
+        button->setPalette( pal );
+        connect( button, &QPushButton::clicked, this, slot );
+    };
+    setupLinkButton( ui.licenseButton, qtr( "License" ), &AboutDialog::showLicense );
+    setupLinkButton( ui.authorsButton, qtr( "Authors" ), &AboutDialog::showAuthors );
+    setupLinkButton( ui.creditsButton, qtr( "Credits" ), &AboutDialog::showCredit );
 
     ui.version->installEventFilter( this );
 }
@@ -163,13 +171,6 @@ bool AboutDialog::eventFilter(QObject *obj, QEvent *event)
             }
             return true;
         }
-        else if( obj == ui.licenseButton )
-            showLicense();
-        else if( obj == ui.authorsButton )
-            showAuthors();
-        else if( obj == ui.creditsButton )
-            showCredit();
-
         return false;
     }
 

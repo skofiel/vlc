@@ -296,41 +296,32 @@ margin-bottom: 6px;</string>
        <number>0</number>
       </property>
       <item>
-       <widget class="QLabel" name="authorsButton">
+       <widget class="QPushButton" name="authorsButton">
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
-        <property name="styleSheet">
-         <string notr="true">padding: 10px</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
+        <property name="flat">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="licenseButton">
+       <widget class="QPushButton" name="licenseButton">
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
-        <property name="styleSheet">
-         <string notr="true">padding: 10px</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
+        <property name="flat">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="creditsButton">
+       <widget class="QPushButton" name="creditsButton">
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
-        <property name="styleSheet">
-         <string notr="true">padding: 10px;</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
+        <property name="flat">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
