@@ -146,6 +146,36 @@ QtObject {
         return getFlickableBoundedContentY(flickable, newContentY)
     }
 
+    // name of the segment at index of a path of the history (e.g. "Videos"
+    // for ["video"]), or "" when it is not shown (default sub-pages, and
+    // pages that are named by their title)
+    function pageName(path : var, index : int) : string {
+        const segment = path[index]
+
+        if (index === 0) {
+            switch (segment) {
+            case "home": return qsTr("Home")
+            case "video": return qsTr("Videos")
+            case "music": return qsTr("Music")
+            case "network": return qsTr("Network")
+            case "playlists": return qsTr("Playlists")
+            case "recent": return qsTr("Recent")
+            }
+        } else if (index === 1) {
+            switch (path[0] + "/" + segment) {
+            case "video/playlists": return qsTr("Playlists")
+            case "music/artists": return qsTr("Artists")
+            case "music/albums": return qsTr("Albums")
+            case "music/tracks": return qsTr("Songs")
+            case "music/genres": return qsTr("Genres")
+            case "music/playlists": return qsTr("Playlists")
+            case "network/services": return qsTr("Services")
+            case "network/url": return qsTr("URL")
+            }
+        }
+        return ""
+    }
+
     // formats a number in the language of the interface, with at most
     // `decimals` decimals (without the trailing zeros)
     function formatNumber(value : real, decimals : int) : string {
