@@ -12,6 +12,10 @@ class NavigationHistory : public QObject
 public:
     Q_PROPERTY(bool previousEmpty READ isPreviousEmpty NOTIFY previousEmptyChanged FINAL)
     /**
+     * whether there is a page to go forward to (after going back)
+     */
+    Q_PROPERTY(bool nextEmpty READ isNextEmpty NOTIFY nextEmptyChanged FINAL)
+    /**
      * current path
      */
     Q_PROPERTY(QStringList viewPath READ viewPath NOTIFY viewPathChanged FINAL)
@@ -33,6 +37,7 @@ public:
 
     QVariant getCurrent();
     bool isPreviousEmpty();
+    bool isNextEmpty() const;
     QStringList viewPath() const;
     QQmlPropertyMap* viewProp() const;
 
@@ -42,6 +47,7 @@ public:
 signals:
     void navigate(Qt::FocusReason);
     void previousEmptyChanged(bool empty);
+    void nextEmptyChanged(bool empty);
     void viewPathChanged(const QStringList& viewPath);
     void viewPropChanged(QQmlPropertyMap*);
 
@@ -79,10 +85,18 @@ public slots:
     /// Go to previous page
     void previous(Qt::FocusReason = Qt::OtherFocusReason);
 
+    /// Go to the page left by the last call to previous()
+    void next(Qt::FocusReason = Qt::OtherFocusReason);
+
 private:
     void updateCurrent();
+    void clearNext();
 
-    std::vector<std::pair<QStringList, std::unique_ptr<QQmlPropertyMap>>> m_history;
+    using Node = std::pair<QStringList, std::unique_ptr<QQmlPropertyMap>>;
+
+    std::vector<Node> m_history;
+    // pages left with previous(), the last one is the next page
+    std::vector<Node> m_next;
     QStringList m_viewPath;
     QQmlPropertyMap* m_viewProperties = nullptr;
 };
