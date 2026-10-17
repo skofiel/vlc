@@ -967,7 +967,7 @@ void AddonItemDelegate::paint( QPainter *painter,
     int i_downloads = index.data( AddonsModel::DOWNLOAD_COUNT).toInt();
     if ( i_downloads )
         painter->drawText( textrect.translated( scoreicon.width() + margins.left(), 0 ),
-                           Qt::AlignLeft, qtr("%1 downloads").arg( i_downloads ) );
+                           Qt::AlignLeft, qtr("%1 download", "%1 downloads", i_downloads).arg( i_downloads ) );
 
     painter->restore();
 
