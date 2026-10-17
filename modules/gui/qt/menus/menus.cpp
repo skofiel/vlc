@@ -168,13 +168,11 @@ VLCMenuBar::VLCMenuBar(QObject* parent)
 
 
 /**
- * Media ( File ) Menu
- * Opening, streaming and quit
+ * Entries of the Media menu that open, convert or stream media
  **/
-void VLCMenuBar::FileMenu(qt_intf_t *p_intf, QMenu *menu)
+static void FileMenuOpenEntries(qt_intf_t *p_intf, QMenu *menu)
 {
     auto mi = p_intf->p_mi;
-    QAction *action;
 
     //use a lambda here as the Triggrered signal is emiting and it will pass false (checked) as a first argument
     addDPStaticEntry( menu, qtr( "Open &File..." ),
@@ -213,6 +211,18 @@ void VLCMenuBar::FileMenu(qt_intf_t *p_intf, QMenu *menu)
         &DialogsProvider::openAndTranscodingDialogs, "Ctrl+R" );
     addDPStaticEntry( menu, qtr( "&Stream..." ),
         ":/menu/stream.svg", &DialogsProvider::openAndStreamingDialogs, "Ctrl+S" );
+}
+
+/**
+ * Media ( File ) Menu
+ * Opening, streaming and quit
+ **/
+void VLCMenuBar::FileMenu(qt_intf_t *p_intf, QMenu *menu)
+{
+    auto mi = p_intf->p_mi;
+    QAction *action;
+
+    FileMenuOpenEntries( p_intf, menu );
     menu->addSeparator();
 
     action = menu->addAction( qtr( "Quit at the end of play queue" ), [playlist = THEMPL](bool checked){
@@ -230,6 +240,45 @@ void VLCMenuBar::FileMenu(qt_intf_t *p_intf, QMenu *menu)
         action = menu->addAction( qtr( "Close to systray"), systray,
                                  &VLCSystray::toggleUpdateMenu );
     }
+
+    addDPStaticEntry( menu, qtr( "&Quit" ) ,
+        ":/menu/exit.svg", &DialogsProvider::quit, "Ctrl+Q" );
+}
+
+/**
+ * Main menu of the "..." button: the media entries, the customization, the
+ * settings and about, then the classic menus
+ **/
+void VLCMenuBar::MainMenu( qt_intf_t *p_intf, QMenu *menu )
+{
+    FileMenuOpenEntries( p_intf, menu );
+    menu->addSeparator();
+
+    addDPStaticEntry( menu, qtr( "Customize &Player..." ), ":/menu/ic_fluent_options.svg",
+        &DialogsProvider::showToolbarEditorDialog, "" );
+    addDPStaticEntry( menu, qtr( "Plugins and &Extensions..." ), "",
+        &DialogsProvider::pluginDialog, "" );
+    addDPStaticEntry( menu, qtr( "S&ettings..." ), ":/menu/preferences.svg",
+        &DialogsProvider::settingsDialog, "Ctrl+P" );
+    addDPStaticEntry( menu, qfut( I_MENU_ABOUT ), ":/menu/info.svg",
+        &DialogsProvider::aboutDialog, "Shift+F1", QAction::AboutRole );
+    menu->addSeparator();
+
+    QMenu *submenu = menu->addMenu( qtr( "P&layback" ) );
+    NavigMenu( p_intf, submenu );
+    submenu = menu->addMenu( qtr( "&Audio" ) );
+    AudioMenu( p_intf, submenu );
+    submenu = menu->addMenu( qtr( "&Video" ) );
+    VideoMenu( p_intf, submenu );
+    submenu = menu->addMenu( qtr( "Subti&tle" ) );
+    SubtitleMenu( p_intf, submenu );
+    submenu = menu->addMenu( qtr( "Tool&s" ) );
+    ToolsMenu( p_intf, submenu );
+    submenu = menu->addMenu( qtr( "V&iew" ) );
+    ViewMenu( p_intf, submenu );
+    submenu = menu->addMenu( qtr( "&Help" ) );
+    HelpMenu( p_intf, submenu );
+    menu->addSeparator();
 
     addDPStaticEntry( menu, qtr( "&Quit" ) ,
         ":/menu/exit.svg", &DialogsProvider::quit, "Ctrl+Q" );
