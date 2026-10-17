@@ -1371,6 +1371,7 @@ libqml_module_widgets_a_QML = \
 	widgets/qml/ScaledImage.qml \
 	widgets/qml/TextAutoScroller.qml \
 	widgets/qml/SearchBox.qml \
+	widgets/qml/SegmentedChoice.qml \
 	widgets/qml/SliderExt.qml \
 	widgets/qml/SortControl.qml \
 	widgets/qml/SplitButton.qml \
