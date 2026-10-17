@@ -1807,6 +1807,40 @@ Rama `claude/wonderful-pascal-entcah`, sobre `master` (`4953f0b`). Validado con 
 
 **Batería completa tras la fase 4:** pasan 103 tests y fallan los mismos 8 ajenos. En la ejecución en paralelo fallaron además `test_src_clock_clock` (alarma de 10 s, tarda 8,6 s sin carga) y `test_src_preparser_thumbnail`; ambos pasan al ejecutarlos solos y no dependen de Qt.
 
+**Fase 5: hecha, siguiendo `design/ANALISIS-DISENO.md` (rama `design/rediseno`), que precisa la sección 6.6.**
+
+La especificación del rediseño pide una barra lateral sin subentradas: las secciones de cada página se alcanzan desde la propia página. Por eso la fase 5 va más allá de 6.6 en ese punto.
+
+| Tarea | Commit | Validación |
+|---|---|---|
+| Fallo encontrado al probar Red | `6e13485` xcb_apps: do not read x11-display when it is not declared | Antes, la interfaz abortaba al abrir Red en un build sin `xcb_window` (sin RandR). Comprobado con gdb |
+| Historial con «adelante» | `b631028` qt: navigation history: allow to go forward | Botones ← → en la cabecera |
+| Cabecera de página (4.4 del análisis) | `ec8ac83` y `1802db4` (migas de pan) | ← →, migas de pan («Music › Albums») y «N items». Plural con la convención de VLC: `qsTr(singular, plural, n)` |
+| Barra lateral (4.2) | `e052870` y `725cd10` | Home, Videos, Music, Network, Playlists, Recent y «Add item». Activo en naranja y negrita, sin indicador lateral. Música y Red abren un índice de secciones. Test `test_navigation_model` reescrito para el modelo plano |
+| Cuadrícula de vídeo (4.4) | `6078b37` | Los vistos se atenúan y tienen la barra completa. Los que están a medias llevan barra parcial. Desaparece la marca de «nuevo» |
+| Orden de vídeo (4.4) | `691db9b` | Unwatched First, Watched First, Newest First, Oldest First, Title A-Z y Title Z-A, con un orden fijo por entrada |
+| Inicio (4.3) | `3828b37` | «Watch Next ›»: el título lleva a la lista completa |
+| Listas (4.7) | `b24ebdb` y `d68f0a1` | «Create playlist». Crear una lista vacía fallaba con una aserción en `MLPlaylistListModel::create()`; corregido |
+| Cola (4.7) | `e08282e` | «3 items - 47m», más ordenar, repetir, aleatorio, quitar, añadir y buscar. Filas con asa o con ▶ naranja |
+| Menú «…» de página (4.4) | `802cac3` | En Vídeos: «Add Folder» y «Resync» |
+
+**Entorno de la fase 5:**
+- Se ha instalado medialibrary 0.13.2 (archivo de Ubuntu) para poder probar la biblioteca. El de la distribución, 0.12, no llega al mínimo de VLC 4.
+- Se han activado `png` y `jpeg`. Sin un codificador JPEG, las miniaturas de la biblioteca fallaban sin avisar.
+- La biblioteca de prueba tiene vídeos y canciones etiquetadas, generados con ffmpeg.
+
+**Reservas de la fase 5:**
+- **Iconos:** se usan los glifos que ya existían. Los del diseño (carpeta con ▶, carpeta con nota, antena) piden regenerar `VLCIcons.ttf` con fontforge, y quedan para el pulido visual.
+- **«…» de carpeta:** de las entradas del diseño (Add File, Add Folder, Edit Subtitle Tracks, Edit Audio Tracks, Resync, Info), solo «Add Folder» y «Resync» tienen equivalente en VLC.
+- **Pendiente para la fase de la ventana:**
+  - página de artista con la lista de pistas;
+  - listas M3U navegables como carpeta;
+  - diálogo «Open Network Stream» con varias URL;
+  - menús nativos (QMenu), que aún salen claros en el tema oscuro.
+- **«Add item»** lleva a las carpetas de Red para añadirlas a la biblioteca. El diseño no aclara qué hace esa entrada.
+
+**Batería completa tras la fase 5:** pasan 110 tests y fallan 4 de los 8 ajenos de siempre (`http_tunnel_test`, `test_modules_codec_hxxx_helper`, `test_qt_dialog_model` y `test_qt_renderer_manager`). Los otros 4 pasan ahora porque el build tiene medialibrary, png y jpeg.
+
 ### 7.3 Icono de la aplicación
 
 Commit `2f45fdd` (icons: new application icon). A petición del propietario, el icono de VLC (el cono) se sustituye por un «play» de tres trazos entrelazados, redibujado en vectorial a partir de la propuesta inicial:
