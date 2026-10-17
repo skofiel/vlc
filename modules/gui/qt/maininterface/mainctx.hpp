@@ -120,6 +120,10 @@ class MainCtx : public QObject
     Q_PROPERTY(bool hasToolbarMenu READ hasToolbarMenu WRITE setHasToolbarMenu NOTIFY hasToolbarMenuChanged FINAL)
     Q_PROPERTY(bool canShowVideoPIP READ canShowVideoPIP CONSTANT FINAL)
     Q_PROPERTY(bool pinVideoControls READ pinVideoControls WRITE setPinVideoControls NOTIFY pinVideoControlsChanged FINAL)
+    // value of qt-accent-color: "default", "system" or a color (e.g. "#FF8800")
+    Q_PROPERTY(QString accentColor READ accentColor WRITE setAccentColor NOTIFY accentColorChanged FINAL)
+    // accent colors offered to the user, the first one is the default accent
+    Q_PROPERTY(QStringList accentColorPresets READ accentColorPresets CONSTANT FINAL)
     Q_PROPERTY(float pinOpacity READ pinOpacity WRITE setPinOpacity NOTIFY pinOpacityChanged FINAL)
     Q_PROPERTY(ControlbarProfileModel* controlbarProfileModel READ controlbarProfileModel CONSTANT FINAL)
     Q_PROPERTY(bool hasAcrylicSurface READ hasAcrylicSurface NOTIFY hasAcrylicSurfaceChanged FINAL)
@@ -248,6 +252,8 @@ public:
     inline void setCanShowVideoPIP(bool canShowVideoPIP) { m_canShowVideoPIP = canShowVideoPIP; }
 
     inline bool pinVideoControls() const { return m_pinVideoControls; }
+    inline QString accentColor() const { return m_accentColor; }
+    static QStringList accentColorPresets();
     inline float pinOpacity() const { return m_pinOpacity; }
 
     inline ControlbarProfileModel* controlbarProfileModel() const { return m_controlbarProfileModel; }
@@ -458,6 +464,7 @@ protected:
 
     /* Pinned */
     bool                 m_pinVideoControls = false;
+    QString              m_accentColor;
     float                m_pinOpacity       = 1.0f;
 
     bool                 m_useGlobalShortcuts = true;
@@ -527,6 +534,7 @@ public slots:
     void setHasToolbarMenu( bool );
 
     void setPinVideoControls( bool );
+    void setAccentColor(const QString &accentColor);
     void setPinOpacity( float );
 
     void setbgCone(bool);
@@ -588,6 +596,7 @@ signals:
     void intfDevicePixelRatioChanged();
 
     void pinVideoControlsChanged();
+    void accentColorChanged();
     void pinOpacityChanged();
 
     void hasAcrylicSurfaceChanged(bool);

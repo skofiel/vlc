@@ -170,6 +170,7 @@ signals:
 
 private:
     void updatePalette();
+    void loadAccentColor();
 
     void makeLightPalette();
     void makeDarkPalette();
