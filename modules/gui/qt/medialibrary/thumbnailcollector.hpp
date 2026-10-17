@@ -40,6 +40,7 @@ class ThumbnailCollector : public QObject
 
 public:
     ThumbnailCollector(QObject *parent = nullptr);
+    ~ThumbnailCollector() override;
 
     void start(MediaLib *ml, const QSet<int64_t> &mlIds);
 

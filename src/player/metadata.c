@@ -171,8 +171,11 @@ vlc_player_AddMetadataListener(vlc_player_t *player,
     listener_id->cbs_data = cbs_data;
     listener_id->option = option;
 
-    vlc_mutex_lock(&player->metadata_listeners_lock);
-
+    /* The list is only modified with the player lock held, so it can be read
+     * here without the metadata_listeners_lock. That lock only protects the
+     * list against the audio thread (vlc_player_OnLoudnessEvent), which is
+     * called with the audio meter lock held: the meter plugin must therefore
+     * be added/removed without holding the metadata_listeners_lock. */
     int ret;
     switch (option)
     {
@@ -186,10 +189,10 @@ vlc_player_AddMetadataListener(vlc_player_t *player,
     if (ret == VLC_EGENERIC)
     {
         free(listener_id);
-        vlc_mutex_unlock(&player->metadata_listeners_lock);
         return NULL;
     }
 
+    vlc_mutex_lock(&player->metadata_listeners_lock);
     vlc_list_append(&listener_id->node, &player->metadata_listeners);
 
     vlc_mutex_unlock(&player->metadata_listeners_lock);
@@ -204,7 +207,11 @@ vlc_player_RemoveMetadataListener(vlc_player_t *player,
     vlc_player_assert_locked(player);
     assert(listener_id);
 
+    /* Stop notifying this listener before removing the meter plugin (without
+     * the metadata_listeners_lock held, cf. vlc_player_AddMetadataListener) */
     vlc_mutex_lock(&player->metadata_listeners_lock);
+    vlc_list_remove(&listener_id->node);
+    vlc_mutex_unlock(&player->metadata_listeners_lock);
 
     switch (listener_id->option)
     {
@@ -215,8 +222,5 @@ vlc_player_RemoveMetadataListener(vlc_player_t *player,
         default: vlc_assert_unreachable();
     }
 
-    vlc_list_remove(&listener_id->node);
     free(listener_id);
-
-    vlc_mutex_unlock(&player->metadata_listeners_lock);
 }

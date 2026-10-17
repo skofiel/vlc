@@ -1,2 +1,3 @@
 extras/misc/mpris.xml
 modules/access/dvb/scan.c
+modules/codec/hxxx_helper_testdec.c

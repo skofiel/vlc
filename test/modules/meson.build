@@ -120,6 +120,14 @@ vlc_tests += {
 }
 
 vlc_tests += {
+    'name' : 'test_modules_playlist_ram',
+    'sources' : files('demux/playlist/ram.c'),
+    'suite' : ['modules', 'test_modules'],
+    'link_with' : [libvlc, libvlccore],
+    'module_depends' : ['playlist'],
+}
+
+vlc_tests += {
     'name' : 'test_modules_demux_timestamps',
     'sources' : files('demux/timestamps.c'),
     'suite' : ['modules', 'test_modules']

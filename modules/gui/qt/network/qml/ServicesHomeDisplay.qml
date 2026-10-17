@@ -162,7 +162,7 @@ Widgets.PageLoader {
                 else
                     root._showServiceNode(tree, source_name, reason)
             }
-            onHomeButtonClicked: (tree, reason) => root._showServiceHome(reason)
+            onHomeButtonClicked: (reason) => root._showServiceHome(reason)
             onCurrentIndexChanged: History.viewProp.initialIndex = currentIndex
 
             model: NetworkMediaModel {

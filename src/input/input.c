@@ -846,9 +846,7 @@ static void InitProperties( input_thread_t *input )
     if( !demux_Control( master->p_demux, DEMUX_GET_ATTACHMENTS,
                         &attachment, &i_attachment ) )
     {
-        vlc_mutex_lock( &priv->p_item->lock );
         AppendAttachment( input, i_attachment, attachment );
-        vlc_mutex_unlock( &priv->p_item->lock );
     }
 
     int input_type;
@@ -2385,6 +2383,11 @@ static bool Control( input_thread_t *p_input,
 
             if( i_type == INPUT_CONTROL_SET_SEEKPOINT_PREV )
             {
+                /* The current title may have no seekpoints at all */
+                if( i_seekpoint < 0
+                 || i_seekpoint >= priv->master->title[i_title]->i_seekpoint )
+                    break;
+
                 vlc_tick_t i_seekpoint_time = priv->master->title[i_title]->seekpoint[i_seekpoint]->i_time_offset;
                 vlc_tick_t i_input_time = var_GetInteger( p_input, "time" );
                 if( i_seekpoint_time >= 0 && i_input_time >= 0 )
@@ -3111,12 +3114,8 @@ static void InputSourceMeta( input_thread_t *p_input,
         }
 
         if( p_demux_meta->i_attachments > 0 )
-        {
-            vlc_mutex_lock( &input_priv(p_input)->p_item->lock );
             AppendAttachment( p_input, p_demux_meta->i_attachments,
                               p_demux_meta->attachments );
-            vlc_mutex_unlock( &input_priv(p_input)->p_item->lock );
-        }
         module_unneed( p_demux_meta, p_id3 );
     }
     vlc_object_delete(p_demux_meta);
@@ -3248,19 +3247,22 @@ static void InputMetaUser( input_thread_t *p_input, vlc_meta_t *p_meta )
     }
 }
 
+/* Must be called without the item lock: the event is sent once the lock is
+ * released since event handlers can take other locks (player, item). */
 static void AppendAttachment( input_thread_t *p_input, int i_new,
                               input_attachment_t **pp_new )
 {
     input_thread_private_t *priv = input_priv( p_input );
-    int i_attachment = priv->i_attachment;
     int i;
 
-    if ( i_attachment + i_new == 0 )
+    if ( i_new <= 0 )
     {
         free( pp_new );
         return;
     }
 
+    vlc_mutex_lock( &priv->p_item->lock );
+    int i_attachment = priv->i_attachment;
     input_attachment_t **pp_att = realloc( priv->attachment,
                     sizeof(*pp_att) * ( i_attachment + i_new ) );
     if( likely(pp_att) )
@@ -3272,7 +3274,13 @@ static void AppendAttachment( input_thread_t *p_input, int i_new,
         }
         /* */
         priv->i_attachment = i_attachment;
+    }
+    vlc_mutex_unlock( &priv->p_item->lock );
 
+    if( likely(pp_att) )
+    {
+        /* The attachments are now owned by the input and only released by
+         * the input thread, the array can be used after the unlock */
         input_SendEvent(p_input, &(struct vlc_input_event) {
             .type = INPUT_EVENT_ATTACHMENTS,
             .attachments = { .array = pp_new, .count = i_new },
@@ -3326,8 +3334,8 @@ static void InputUpdateMeta( input_thread_t *p_input, demux_t *p_demux )
             if( is_new )
                 attachment[nb_new++] = attachment[i];
         }
-        AppendAttachment( p_input, nb_new, attachment );
         vlc_mutex_unlock( &priv->p_item->lock );
+        AppendAttachment( p_input, nb_new, attachment );
     }
 
     es_out_ControlSetMeta(&input_priv(p_input)->p_es_out->out, p_meta);

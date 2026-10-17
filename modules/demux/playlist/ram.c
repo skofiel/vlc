@@ -386,6 +386,8 @@ static void ParseClipInfo( const char *psz_clipinfo, char **ppsz_artist, char **
 {
     char *psz_option_next, *psz_option_start, *psz_param, *psz_value, *psz_suboption;
     char *psz_temp_clipinfo = strdup( psz_clipinfo );
+    if( !psz_temp_clipinfo )
+        return;
     psz_option_start = strchr( psz_temp_clipinfo, '"' );
     if( !psz_option_start )
     {
@@ -395,7 +397,8 @@ static void ParseClipInfo( const char *psz_clipinfo, char **ppsz_artist, char **
 
     psz_option_start++;
     psz_option_next = psz_option_start;
-    while( 1 ) /* Process each sub option */
+    bool b_last = false;
+    while( !b_last ) /* Process each sub option */
     {
         /* Get the sub option */
         psz_option_start = psz_option_next;
@@ -407,7 +410,12 @@ static void ParseClipInfo( const char *psz_clipinfo, char **ppsz_artist, char **
         if( psz_option_next )
             *psz_option_next = '\0';
         else
+        {
+            /* Unterminated clipinfo: this is the last sub option, don't
+             * go past the end of the string */
             psz_option_next = strchr( psz_option_start, '\0' );
+            b_last = true;
+        }
         if( psz_option_next == psz_option_start )
             break;
 

@@ -27,10 +27,19 @@ ThumbnailCollector::ThumbnailCollector(QObject *parent)
     , m_ml_event_handle(nullptr, [this](vlc_ml_event_callback_t *cb)
     {
         assert(m_ml);
-        QMutexLocker lock(&m_mut);
+        // don't lock m_mut here: the medialibrary calls onVlcMLEvent() with
+        // its own lock held, which is also taken to unregister the callback.
+        // Once unregistered, onVlcMLEvent() can't be running anymore.
         m_ml->unregisterEventListener(cb);
     })
 {
+}
+
+ThumbnailCollector::~ThumbnailCollector()
+{
+    // unregister before m_pending and m_thumbnails are destroyed, they are
+    // accessed by onVlcMLEvent()
+    m_ml_event_handle.reset();
 }
 
 void ThumbnailCollector::start(MediaLib *ml, const QSet<int64_t> &mlIds)

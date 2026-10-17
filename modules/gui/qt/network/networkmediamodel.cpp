@@ -30,6 +30,7 @@
 #include "playlist/playlist_controller.hpp"
 
 #include <unordered_set>
+#include <atomic>
 
 #include <QSemaphore>
 #include <QDateTime>
@@ -448,7 +449,11 @@ public:
             vlc_preparser_req_Release( m_parserReq );
             m_parserReq = NULL;
         }
-        m_parserReq = vlc_media_tree_Preparse( tree.get(), parser, m_treeItem.media.get() );
+        input_item_t* media = m_treeItem.media.get();
+        m_preparsingMedia.store(media);
+        m_parserReq = vlc_media_tree_Preparse( tree.get(), parser, media );
+        if (m_parserReq == NULL)
+            onPreparseEnded(media); // no callback will be invoked
 
         m_listener = std::move( l );
 
@@ -470,10 +475,22 @@ protected:
         return items;
     }
 
+    // can be called from any thread
+    void onPreparseEnded(input_item_t* media)
+    {
+        // only release the semaphore once, for the request we submitted
+        // (the tree listener is notified for every preparsed node)
+        input_item_t* expected = media;
+        if (m_preparsingMedia.compare_exchange_strong(expected, nullptr))
+            m_preparseSem.release();
+    }
+
 public:
     MediaLib* m_mediaLib;
     bool m_hasTree = false;
     QSemaphore m_preparseSem;
+    // media of the pending preparse request, if any
+    std::atomic<input_item_t*> m_preparsingMedia { nullptr };
     std::unique_ptr<MediaTreeListener> m_listener;
     QHash<QString, NetworkMediaItemPtr> m_items;
     std::unique_ptr<MLMediaStore> m_MLMedias;
@@ -1035,7 +1052,7 @@ void NetworkMediaModelPrivate::ListenerCb::onItemRemoved( MediaTreePtr, input_it
 
 void NetworkMediaModelPrivate::ListenerCb::onItemPreparseEnded(MediaTreePtr, input_item_node_t* node, int )
 {
-    model->d_func()->m_preparseSem.release();
+    model->d_func()->onPreparseEnded(node->p_item);
     SharedInputItem p_node { node->p_item };
     QMetaObject::invokeMethod(model, [model=model, p_node=std::move(p_node)]() {
         if (p_node != model->d_func()->m_treeItem.media)

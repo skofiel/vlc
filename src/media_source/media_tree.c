@@ -170,12 +170,16 @@ media_subtree_preparse_ended(vlc_preparser_req *req, int status, void *user_data
     /* TODO retrieve the node without traversing the tree */
     bool found = vlc_media_tree_FindNodeByMedia(&tree->root, media,
                                                 &subtree_root, NULL);
-    if (!found) {
-        /* the node probably failed to be allocated */
-        vlc_media_tree_Unlock(tree);
-        return;
+    if (found)
+        vlc_media_tree_Notify(tree, on_preparse_end, subtree_root, status);
+    else
+    {
+        /* The node has been removed (or failed to be allocated) meanwhile.
+         * Notify anyway so that listeners waiting for the end of the
+         * preparsing are not left hanging. */
+        input_item_node_t detached = { .p_item = media };
+        vlc_media_tree_Notify(tree, on_preparse_end, &detached, status);
     }
-    vlc_media_tree_Notify(tree, on_preparse_end, subtree_root, status);
     vlc_media_tree_Unlock(tree);
 }
 
