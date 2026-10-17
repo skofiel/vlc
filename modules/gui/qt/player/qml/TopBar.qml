@@ -65,6 +65,31 @@ FocusScope{
 
     readonly property int _sideMargin: VLCStyle.margin_small + sideMargin
 
+    // the title, or the name of the file when the title is a path
+    readonly property string _displayTitle: {
+        const t = root.title
+        if (!(t.startsWith("/") || t.includes("://") || /^[A-Za-z]:\\/.test(t)))
+            return t
+        const name = t.split(/[\\/]/).pop()
+        return name ? name : t
+    }
+
+    // page of the library the player goes back to (e.g. "Videos"), shown when
+    // the controls are pinned: the player is shown over the current page
+    readonly property var _contextPath: History.viewPath
+    readonly property string _contextText: Helpers.pageName(_contextPath, 0)
+    readonly property string _contextIcon: {
+        switch (_contextPath[0] ?? "") {
+        case "home": return VLCIcons.home
+        case "video": return VLCIcons.topbar_video
+        case "music": return VLCIcons.topbar_music
+        case "network": return VLCIcons.topbar_network
+        case "playlists": return VLCIcons.playlist
+        case "recent": return VLCIcons.history
+        }
+        return VLCIcons.back
+    }
+
     // Aliases
 
     property alias resumeVisible: resumeDialog.visible
@@ -270,38 +295,103 @@ FocusScope{
             visible: (root._showTopBar && root.resumeVisible === false)
 
             implicitHeight: VLCStyle.icon_banner + VLCStyle.margin_xxsmall * 2
-            implicitWidth: backBtn.implicitWidth + logo.implicitWidth + VLCStyle.margin_xxsmall
+            implicitWidth: logoRow.implicitWidth
 
-            Widgets.IconToolButton {
-                id: backBtn
+            Row {
+                id: logoRow
 
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.left: parent.left
+                height: parent.height
 
-                objectName: "IconToolButton"
-                font.pixelSize: VLCStyle.icon_banner
-                text: VLCIcons.back
-                description: qsTr("Back")
+                spacing: VLCStyle.margin_xxsmall
 
-                AccessibleCompat.id: "topBarBackButton"
+                Widgets.IconToolButton {
+                    id: backBtn
 
-                focus: true
+                    anchors.verticalCenter: parent.verticalCenter
 
-                Navigation.parentItem: root
-                Navigation.rightItem: menuSelector
-                onClicked: root.backRequested()
+                    // with the pinned controls, the context button goes back
+                    visible: !root.pinControls
 
-                onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
-            }
+                    objectName: "IconToolButton"
+                    font.pixelSize: VLCStyle.icon_banner
+                    text: VLCIcons.back
+                    description: qsTr("Back")
 
-            Widgets.BannerCone {
-                id: logo
+                    AccessibleCompat.id: "topBarBackButton"
 
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.left: backBtn.right
-                anchors.leftMargin: VLCStyle.margin_xxsmall
+                    focus: true
 
-                color: theme.accent
+                    Navigation.parentItem: root
+                    Navigation.rightItem: menuSelector
+                    onClicked: root.backRequested()
+
+                    onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
+                }
+
+                Widgets.BannerCone {
+                    id: logo
+
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    color: theme.accent
+                }
+
+                Widgets.IconToolButton {
+                    id: leftMenuButton
+
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    visible: root.pinControls && !root.showToolbar
+                    enabled: visible
+
+                    font.pixelSize: VLCStyle.icon_banner
+
+                    text: VLCIcons.more
+                    description: qsTr("Menu")
+
+                    AccessibleCompat.id: "topBarLeftMenuButton"
+
+                    checked: contextMenu.shown
+
+                    Navigation.parentItem: root
+                    Navigation.rightItem: contextButton
+
+                    onClicked: contextMenu.popup(this.mapToGlobal(0, height))
+
+                    onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
+                }
+
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    visible: contextButton.visible
+
+                    width: VLCStyle.border
+                    height: VLCStyle.icon_normal
+
+                    color: theme.separator
+                }
+
+                Widgets.ButtonExt {
+                    id: contextButton
+
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    visible: root.pinControls && (root._contextText.length > 0)
+                    enabled: visible
+
+                    iconTxt: root._contextIcon
+                    text: root._contextText
+
+                    Accessible.name: qsTr("Back to %1").arg(root._contextText)
+
+                    Navigation.parentItem: root
+                    Navigation.leftItem: leftMenuButton
+
+                    onClicked: root.backRequested()
+
+                    onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
+                }
             }
         }
 
@@ -343,7 +433,7 @@ FocusScope{
         readonly property bool _alignHCenter: _centerX > _leftLimit
                                               && _centerX + centerTitleText.implicitWidth < _rightLimit
 
-        visible: (_showCenterText && root.resumeVisible === false)
+        visible: (root._showCenterText && root.resumeVisible === false)
 
         enabled: visible
 
@@ -352,8 +442,8 @@ FocusScope{
         leftPadding: VLCStyle.margin_small
         rightPadding: VLCStyle.margin_small
 
-        text: root.title
-        color: theme.fg.primary
+        text: root._displayTitle
+        color: theme.fg.secondary
         font.pixelSize: VLCStyle.dp(13, VLCStyle.scale)
         font.weight: Font.DemiBold
         elide: Text.ElideRight
@@ -432,7 +522,9 @@ FocusScope{
         anchors.right: parent.right
         anchors.rightMargin: root._sideMargin + extraRightMargin
 
-        visible: root._showTopBar
+        // with the pinned controls, the menu is on the left and the play
+        // queue button in the control bar
+        visible: root._showTopBar && !root.pinControls
 
         Widgets.IconToolButton {
             id: menuSelector
@@ -461,22 +553,6 @@ FocusScope{
 
             onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
 
-            Menus.QmlGlobalMenu {
-                id: contextMenu
-
-                ctx: MainCtx
-
-                onAboutToShow: root.requestLockUnlockAutoHide(true)
-                onAboutToHide: root.requestLockUnlockAutoHide(false)
-            }
-
-            Connections {
-                target: root
-
-                function onForceUnlock() {
-                    contextMenu.close()
-                }
-            }
         }
 
         PlaylistPane.PlaylistToggleButton {
@@ -505,6 +581,23 @@ FocusScope{
             Accessible.onToggleAction:togglePlaylistVisibility()
 
             onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
+        }
+    }
+
+    Menus.QmlGlobalMenu {
+        id: contextMenu
+
+        ctx: MainCtx
+
+        onAboutToShow: root.requestLockUnlockAutoHide(true)
+        onAboutToHide: root.requestLockUnlockAutoHide(false)
+    }
+
+    Connections {
+        target: root
+
+        function onForceUnlock() {
+            contextMenu.close()
         }
     }
 }
