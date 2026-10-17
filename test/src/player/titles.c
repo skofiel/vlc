@@ -69,6 +69,45 @@ test_titles(struct ctx *ctx, bool null_names)
     test_end(ctx);
 }
 
+static void
+test_titles_without_chapters(struct ctx *ctx)
+{
+    test_log("titles without chapters\n");
+    vlc_player_t *player = ctx->player;
+
+    struct media_params params = DEFAULT_MEDIA_PARAMS(VLC_TICK_FROM_SEC(100));
+    params.title_count = 2;
+    params.chapter_count = 0;
+    player_set_next_mock_media(ctx, "media1", &params);
+
+    player_start(ctx);
+
+    {
+        vec_on_titles_changed *vec = &ctx->report.on_titles_changed;
+        while (vec->size == 0)
+            vlc_player_CondWait(player, &ctx->wait);
+    }
+
+    vec_on_title_selection_changed *vec =
+        &ctx->report.on_title_selection_changed;
+    while (vec->size == 0)
+        vlc_player_CondWait(player, &ctx->wait);
+    assert(vec->data[0] == 0);
+
+    /* Must be ignored by the input thread (no chapters to go to) */
+    vlc_player_SelectPrevChapter(player);
+    vlc_player_SelectNextChapter(player);
+
+    /* Controls are processed in order: once the new title is selected, the
+     * chapter requests above have been handled */
+    vlc_player_SelectTitleIdx(player, 1);
+    while (vec->size == 1)
+        vlc_player_CondWait(player, &ctx->wait);
+    assert(vec->data[1] == 1);
+
+    test_end(ctx);
+}
+
 int
 main(void)
 {
@@ -76,6 +115,7 @@ main(void)
     ctx_init(&ctx, 0);
     test_titles(&ctx, true);
     test_titles(&ctx, false);
+    test_titles_without_chapters(&ctx);
     ctx_destroy(&ctx);
     return 0;
 }
