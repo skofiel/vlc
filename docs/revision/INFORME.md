@@ -1768,6 +1768,45 @@ Rama `claude/wonderful-pascal-entcah`, sobre `master` (`4953f0b`). Validado con 
 
 **Batería completa tras la fase 3:** pasan 103 tests y fallan los mismos 8 ajenos.
 
+**Fase 4: hecha, con el alcance reducido que se detalla en las reservas.**
+
+| Tarea | Commit | Validación |
+|---|---|---|
+| Píldora de play/pausa (6.3) | `3b2fbfc` qml: PlayButton: draw the button as an accent pill | Captura: 54 × 30 dp, glifo de 16 dp; hover +8 %, pulsado −8 %; anillo de foco de 2 dp separado 2 dp. Nombre accesible «Play» o «Pause» |
+| Barra de progreso de 14 dp (6.4) | `fe480dd` qml: SliderBar: 14 dp seek bar with a thin playhead | Captura con 5 capítulos: pista negra, parte reproducida con el acento a α 0,25, cabezal de 5 dp siempre visible, marcas de capítulo de 1 dp. La barra ya no cambia de altura en hover |
+| Cuña de volumen (6.5) | `9c28864` qml: VolumeWidget: draw the volume as a wedge | Captura con el volumen forzado al 110 %: degradado verde → naranja (100 %) → rojo (máximo) y marca del 100 % |
+| QT‑15 | `6f1886e` qml: VolumeWidget: follow the maximum volume when snapping | El clic derecho se engancha al más cercano de 0, 50 %, 100 % y el máximo real de `qt-max-volume` |
+| Menú de pistas con pestañas (6.7) | `fc8c70a` qml: TracksMenu: organize the menu in tabs | Captura en oscuro y claro: 480 × 320 dp, subrayado naranja de 2 dp. Ctrl+Tab y Ctrl+Mayús+Tab cambian de pestaña |
+| Teclado en el menú de pistas | `58adeae` qml: TracksMenu: fix the keyboard navigation | Probado en Xvfb con `xdotool`: abrir con el ratón, Ctrl+Tab, flechas y Escape |
+
+**Notas de la fase 4:**
+- **Fallo encontrado al implementar 6.7.** El archivo tenía un `FIXME` («Keyboard navigation needs to be fixed for this Popup»), y la causa era esta: si el menú se abría con el ratón, su foco no contaba como foco de teclado. `InterfaceWindowHandler::applyKeyEvent()` trataba entonces Escape, las flechas o Espacio como atajos globales, y el menú nunca los recibía. Ahora el menú toma foco de teclado al abrirse. Escape (o Retroceso) cierra el menú desde las pestañas y vuelve atrás desde las páginas de sincronización.
+- **Por qué no basta la política de cierre del `Popup`:** la navegación de VLC consume Escape como acción de cancelar. Además, con el compositor X11, las teclas llegan a la ventana con `sendEvent` y no pasan por el mapa de atajos de Qt.
+- **Paleta:** el conjunto `Slider` oscuro usa ahora una pista negra, un verde `#2EB82E` y un rojo `#E53935`. Esto también afecta a `ProgressBarExt` (progreso del escaneo y de las actualizaciones) y a `VideoProgressBar` (progreso sobre las miniaturas). Al rojo y al verde no se les aplica el umbral de texto del test de contraste, porque no se usan como texto.
+- **Capturas** en oscuro y claro, con escala 1 y 2, del reproductor (600 × 420 y 1100 × 620) y del menú de pistas con foco de teclado. ASan no da errores.
+
+**Reservas de la fase 4 (desviaciones de la especificación):**
+- **Contenido de las pestañas:**
+  - **Reproducción** solo tiene la velocidad; faltan repetición, A‑B y marcadores.
+  - **Vídeo** solo tiene las pistas; faltan relación de aspecto, recorte y desentrelazado.
+  - **Audio** tiene las pistas, y el menú lleva al retardo; falta el dispositivo.
+  - **Subtítulos** tiene las pistas, y el menú lleva al retardo y a los FPS.
+
+  El resto de 6.7 queda para la fase 7: requiere exponer en QML menús que hoy viven en `menus.cpp`.
+- **Perfiles:** la píldora sustituye al `PlayButton` en lugar de ser una variante nueva del enum `ControlType`. Por eso la ven todos los perfiles, también los antiguos, y el criterio «perfiles antiguos intactos» no se cumple al pie de la letra. Se puede revertir con un `PlayPillButton.qml` si se prefiere.
+- **Detalles distintos de 6.4 y 6.5:**
+  - las marcas de capítulo usan el acento a α 0,6 en lugar de blanco a α 0,24, porque se distinguen mejor sobre la parte reproducida;
+  - el buffer usa `fg.secondary` a α 0,12;
+  - la parte vacía de la cuña usa `fg.secondary` a α 0,2;
+  - la cuña es un `Canvas` dentro de `VolumeWidget.qml` y no un `WedgeSlider.qml` aparte;
+  - el fondo del menú es la superficie de `Window` a α 0,96, porque `bg.elevated` no existe como rol.
+- **No hecho:**
+  - el anuncio «1:23 de 4:56» de la barra (mejora 12);
+  - la revisión con NVDA u Orca, porque el entorno sigue sin lector de pantalla.
+- **Verificación parcial de la cuña:** con las salidas de audio de prueba (`adummy`, `afile`), el reproductor informa de un volumen desconocido (−1) y la cuña sale vacía. El relleno se comprobó forzando temporalmente el volumen en QML, sin incluir ese cambio en ningún commit.
+
+**Batería completa tras la fase 4:** pasan 103 tests y fallan los mismos 8 ajenos. En la ejecución en paralelo fallaron además `test_src_clock_clock` (alarma de 10 s, tarda 8,6 s sin carga) y `test_src_preparser_thumbnail`; ambos pasan al ejecutarlos solos y no dependen de Qt.
+
 ### 7.3 Icono de la aplicación
 
 Commit `2f45fdd` (icons: new application icon). A petición del propietario, el icono de VLC (el cono) se sustituye por un «play» de tres trazos entrelazados, redibujado en vectorial a partir de la propuesta inicial:
