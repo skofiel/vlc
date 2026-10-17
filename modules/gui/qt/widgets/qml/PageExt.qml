@@ -41,6 +41,9 @@ T.Page {
 
     property var sortModel: _firstChild?.sortModel ?? null
 
+    // actions of the "…" menu of the header, as [{ text: label, action: function }]
+    property var pageActions: []
+
     //property is *not* readOnly, a PageLoader may define a localMenuDelegate common for its subviews (music, video)
     property SortMenu sortMenu: null
 
@@ -253,6 +256,32 @@ T.Page {
                 search: _searchCtx
                 Navigation.parentItem: defaultPageHeader
                 Navigation.leftItem: forwardButton
+                Navigation.rightItem: moreButton
+            }
+
+            IconToolButton {
+                id: moreButton
+
+                visible: (root.pageActions?.length ?? 0) > 0
+
+                text: VLCIcons.ellipsis
+                description: qsTr("More")
+
+                onClicked: {
+                    pageMenu.popup(mapToGlobal(0, height + VLCStyle.margin_xxsmall),
+                                   root.pageActions.map((pageAction) => pageAction.text))
+                }
+
+                Navigation.parentItem: defaultPageHeader
+                Navigation.leftItem: gridSortFilter
+
+                StringListMenu {
+                    id: pageMenu
+
+                    ctx: MainCtx
+
+                    onSelected: (index) => root.pageActions[index].action()
+                }
             }
         }
     }

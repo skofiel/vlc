@@ -31,6 +31,12 @@ import VLC.Menus
 Widgets.PageExt {
     id: root
 
+    // folders are added to the library from the network view
+    pageActions: [
+        { text: qsTr("Add Folder"), action: () => History.push(["network", "home"], Qt.OtherFocusReason) },
+        { text: qsTr("Resync"), action: () => MediaLib.reload() }
+    ]
+
     signal showList(var model, int reason)
 
     property alias currentIndex: videoAll.currentIndex
