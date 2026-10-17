@@ -216,6 +216,8 @@ public slots:
                                               const QMessageBox::StandardButton defaultButton = QMessageBox::NoButton,
                                               const QMessageBox::Icon icon = QMessageBox::NoIcon);
     void prefsDialog();
+    // global settings (the advanced ones are in prefsDialog)
+    void settingsDialog() { emit showSettingsDialog(); }
     void firstRunDialog();
     void extendedDialog();
     void synchroDialog();
@@ -288,6 +290,7 @@ public:
 signals:
     void releaseMouseEvents();
     void showToolbarEditorDialog();
+    void showSettingsDialog();
 
     //visiblity signal
     void openDialogVisibleChanged();

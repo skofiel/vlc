@@ -31,6 +31,7 @@
 #include "player/delay_estimator.hpp"
 
 #include "dialogs/toolbar/controlbar_profile_model.hpp"
+#include "dialogs/settings/settingsmodel.hpp"
 #include "dialogs/toolbar/controlbar_profile.hpp"
 
 #include "playlist/playlist_model.hpp"
@@ -273,6 +274,7 @@ void MainUI::registerQMLTypes()
 
         // @uri VLC.Dialogs
         qmlRegisterType<VLCDialog>( uri, versionMajor, versionMinor, "VLCDialog" );
+        qmlRegisterType<SettingsModel>( uri, versionMajor, versionMinor, "SettingsModel" );
         assert(VLCDialogModel::getInstance<false>());
         qmlRegisterSingletonInstance<VLCDialogModel>(uri, versionMajor, versionMinor, "VLCDialogModel", VLCDialogModel::getInstance<false>());
         qmlRegisterUncreatableType<DialogId>( uri, versionMajor, versionMinor, "dialogId", "");

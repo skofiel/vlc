@@ -164,6 +164,8 @@ libqt_plugin_la_SOURCES = \
 	dialogs/toolbar/controlbar_profile.cpp \
 	dialogs/toolbar/controlbar_profile_model.cpp \
 	dialogs/toolbar/controlbar_profile_model.hpp \
+	dialogs/settings/settingsmodel.cpp \
+	dialogs/settings/settingsmodel.hpp \
 	dialogs/vlm/vlm.cpp dialogs/vlm/vlm.hpp \
 	dialogs/playlists/playlists.cpp dialogs/playlists/playlists.hpp \
 	maininterface/compositor.hpp \
@@ -443,6 +445,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	dialogs/systray/systray.moc.cpp \
 	dialogs/toolbar/controlbar_profile.moc.cpp \
 	dialogs/toolbar/controlbar_profile_model.moc.cpp \
+	dialogs/settings/settingsmodel.moc.cpp \
 	dialogs/playlists/playlists.moc.cpp \
 	maininterface/compositor.moc.cpp \
 	maininterface/compositor_common.moc.cpp \
@@ -1044,6 +1047,7 @@ libqml_module_dialogs_a_QML = \
 	dialogs/dialogs/qml/Dialogs.qml \
 	dialogs/dialogs/qml/ModalDialog.qml \
 	dialogs/dialogs/qml/WindowDialog.qml \
+	dialogs/settings/qml/SettingsDialog.qml \
 	dialogs/toolbar/qml/EditorDNDDelegate.qml \
 	dialogs/toolbar/qml/EditorDNDView.qml\
 	dialogs/toolbar/qml/EditorDummyButton.qml \
