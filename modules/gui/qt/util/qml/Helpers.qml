@@ -146,6 +146,11 @@ QtObject {
         return getFlickableBoundedContentY(flickable, newContentY)
     }
 
+    // escapes a text to insert in a Text.StyledText
+    function escapeStyledText(text : string) : string {
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    }
+
     function isArray(obj : var) : bool {
         return (obj?.length !== undefined) ?? false
     }
