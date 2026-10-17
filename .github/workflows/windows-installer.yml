@@ -1,0 +1,150 @@
+# Compila el instalador de Windows (.exe) del fork con la imagen Docker de
+# VideoLAN, en los servidores de GitHub. El resultado se descarga desde la
+# pestaña Actions › la ejecución › Artifacts.
+#
+# La primera vez compila todos los contribs (Qt incluido) y tarda horas; los
+# guarda en la caché de GitHub y las siguientes ejecuciones solo compilan VLC.
+name: Instalador de Windows
+
+on:
+  push:
+    branches: [design/rediseno]
+  workflow_dispatch:
+
+concurrency:
+  group: windows-installer-${{ github.ref }}
+  # No se cancela: perder una compilación de contribs a medias cuesta horas
+  cancel-in-progress: false
+
+env:
+  VLC_IMAGE: registry.videolan.org/vlc-debian-llvm-ucrt:20260611225331
+  BUILD_FLAGS: -a x86_64 -u -r -m -i u
+  # Fuera del espacio de trabajo: /mnt es el disco grande del runner
+  BUILD_ROOT: /mnt/vlc
+  CONTRIB_CACHE: /mnt/contrib-cache
+
+jobs:
+  win64:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Liberar espacio en disco
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /usr/local/share/boost /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          df -h / /mnt
+
+      - uses: actions/checkout@v4
+
+      - name: Preparar el árbol de compilación
+        id: prep
+        run: |
+          sudo mkdir -p "$BUILD_ROOT" "$CONTRIB_CACHE"
+          sudo chown "$(id -u):$(id -g)" "$BUILD_ROOT" "$CONTRIB_CACHE"
+          cp -a "$GITHUB_WORKSPACE/." "$BUILD_ROOT/"
+          echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Restaurar los contribs
+        id: contribs
+        uses: actions/cache/restore@v4
+        with:
+          path: /mnt/contrib-cache
+          key: contribs-win64-ucrt-${{ env.VLC_IMAGE }}-${{ hashFiles('contrib/src/**', 'contrib/bootstrap', 'extras/package/win32/build.sh') }}
+
+      - name: Descargar la imagen
+        run: docker pull "$VLC_IMAGE"
+
+      - name: Compilar
+        timeout-minutes: 330
+        run: |
+          FLAGS="$BUILD_FLAGS"
+          PREBUILT_ENV=()
+          TARBALL="$(ls "$CONTRIB_CACHE"/vlc-contrib-*.tar.zst 2>/dev/null | head -n1 || true)"
+          if [ -n "$TARBALL" ]; then
+              echo "Contribs de la caché: $(basename "$TARBALL")"
+              FLAGS="$FLAGS -p"
+              PREBUILT_ENV=(-e VLC_PREBUILT_CONTRIBS_URL="file:///contrib-cache/$(basename "$TARBALL")")
+          else
+              echo "Sin caché: se compilan y se empaquetan los contribs"
+              FLAGS="$FLAGS -c"
+          fi
+
+          # Se compila como root dentro del contenedor (wine y las herramientas de
+          # la imagen no dependen así de su usuario). safe.directory evita que git
+          # rechace un árbol de otro propietario.
+          # WiX se desactiva: no hace falta para el .exe y su ausencia rompería la
+          # configuración. Por eso el último paso de build.sh (package-msi) falla
+          # y lo que decide el resultado es si existe el .exe.
+          set +e
+          docker run --rm --user 0 \
+              -v "$BUILD_ROOT:/build/vlc" -w /build/vlc \
+              -v "$CONTRIB_CACHE:/contrib-cache:ro" \
+              -e JOBS="$(nproc)" \
+              -e MCONFIGFLAGS="-Dwix=disabled" \
+              -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0='*' \
+              "${PREBUILT_ENV[@]}" \
+              "$VLC_IMAGE" \
+              extras/package/win32/build.sh $FLAGS 2>&1 | tee "$BUILD_ROOT/build-win.log"
+          rc=${PIPESTATUS[0]}
+          set -e
+          sudo chown -R "$(id -u):$(id -g)" "$BUILD_ROOT"
+
+          ls -la "$BUILD_ROOT"/win64-ucrt-meson/*.exe 2>/dev/null || true
+          if ! ls "$BUILD_ROOT"/win64-ucrt-meson/vlc-*-win64.exe >/dev/null 2>&1; then
+              echo "::error::No se ha generado el instalador (build.sh devolvió $rc). Mira el registro."
+              exit 1
+          fi
+          if [ "$rc" -ne 0 ]; then
+              echo "::warning::build.sh devolvió $rc después de generar el .exe (se espera: el paso del MSI está desactivado)."
+          fi
+
+      - name: Mover los contribs empaquetados a la caché
+        id: newcontribs
+        if: always() && steps.contribs.outputs.cache-hit != 'true'
+        run: |
+          sudo chown -R "$(id -u):$(id -g)" "$BUILD_ROOT/contrib" 2>/dev/null || true
+          if ls "$BUILD_ROOT"/contrib/vlc-contrib-*.tar.zst >/dev/null 2>&1; then
+              mv "$BUILD_ROOT"/contrib/vlc-contrib-*.tar.zst "$CONTRIB_CACHE/"
+              ls -la "$CONTRIB_CACHE"
+              echo "save=1" >> "$GITHUB_OUTPUT"
+          else
+              echo "No hay contribs empaquetados que guardar"
+          fi
+
+      - name: Guardar los contribs
+        if: always() && steps.newcontribs.outputs.save == '1'
+        uses: actions/cache/save@v4
+        with:
+          path: /mnt/contrib-cache
+          key: ${{ steps.contribs.outputs.cache-primary-key }}
+
+      - name: Preparar la versión portable
+        run: |
+          src="$(ls -d "$BUILD_ROOT"/win64-ucrt-meson/vlc-win64-ucrt)"
+          # Con una carpeta «portable» junto a vlc.exe, la configuración se
+          # guarda ahí y no se mezcla con la de otro VLC instalado.
+          mkdir -p "$src/portable"
+
+      - name: Subir el instalador
+        uses: actions/upload-artifact@v4
+        with:
+          name: vlc-win64-instalador-${{ steps.prep.outputs.sha }}
+          path: /mnt/vlc/win64-ucrt-meson/vlc-*-win64.exe
+          compression-level: 0
+          retention-days: 30
+
+      - name: Subir la versión portable
+        uses: actions/upload-artifact@v4
+        with:
+          name: vlc-win64-portable-${{ steps.prep.outputs.sha }}
+          path: /mnt/vlc/win64-ucrt-meson/vlc-win64-ucrt/
+          retention-days: 30
+
+      - name: Subir el registro
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: registro-${{ steps.prep.outputs.sha }}
+          path: /mnt/vlc/build-win.log
+          retention-days: 14
