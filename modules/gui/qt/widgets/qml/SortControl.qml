@@ -50,6 +50,8 @@ Widgets.IconToolButton {
 
     // Signals
 
+    // An entry of the model may fix the order (e.g. { text: "Title Z-A", criteria: "title",
+    // order: Qt.DescendingOrder }): selecting it selects both, without toggling the order.
     // sortSelected is triggered with new sorting key when a different sorting key is selected
     // sortOrderSelected is triggered with Qt.AscendingOrder when different sorting key is selected
     // sortOrderSelected is triggered with Qt.AscendingOrder or Qt.DescendingOrder when the same sorting key is selected
@@ -84,8 +86,13 @@ Widgets.IconToolButton {
 
         function onSelected(index: int) {
             const selectedSortKey = root.model[index].criteria
+            const fixedOrder = root.model[index].order
 
-            if (root.sortKey !== selectedSortKey) {
+            if (fixedOrder !== undefined) {
+                if (root.sortKey !== selectedSortKey)
+                    root.sortSelected(selectedSortKey)
+                root.sortOrderSelected(fixedOrder)
+            } else if (root.sortKey !== selectedSortKey) {
                 root.sortSelected(selectedSortKey)
                 root.sortOrderSelected(Qt.AscendingOrder)
             } else {
@@ -99,8 +106,11 @@ Widgets.IconToolButton {
 
     function show() {
         const model = root.model.map(function(modelData) {
+            const fixedOrder = modelData.order
             const checked = modelData.criteria === sortKey
-            const order = checked ? root.sortOrder : undefined
+                            && (fixedOrder === undefined || fixedOrder === root.sortOrder)
+            // the order is only shown for the entries that toggle it
+            const order = (checked && fixedOrder === undefined) ? root.sortOrder : undefined
             return {
                 "text": modelData.text,
                 "checked": checked,
