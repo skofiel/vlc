@@ -37,7 +37,7 @@ T.Popup {
                           ? preferredWidth : Number.MAX_VALUE
                     , root.parent.width)
 
-    height: VLCStyle.dp(296, VLCStyle.scale)
+    height: VLCStyle.dp(320, VLCStyle.scale)
 
     // Animations
 
@@ -56,8 +56,8 @@ T.Popup {
     }
 
     background: Rectangle {
-        // NOTE: The opacity should be stronger on a light background for readability.
-        color: popupTheme.bg.primary.alpha(popupTheme.palette.isDark ? 0.8 : 0.96)
+        // NOTE: nearly opaque so that the video does not hurt readability
+        color: popupTheme.bg.primary.alpha(0.96)
 
         Rectangle {
             anchors.left: parent.left

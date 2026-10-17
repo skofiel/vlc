@@ -29,7 +29,7 @@ import VLC.Widgets as Widgets
 import VLC.Util
 import VLC.Dialogs
 
-RowLayout {
+ColumnLayout {
     id: root
 
     readonly property ColorContext colorContext: ColorContext {
@@ -41,47 +41,160 @@ RowLayout {
     //FIXME make TrackMenuController a proper type (see TrackMenu)
     required property QtObject trackMenuController
 
+    // read by TracksMenu
+    property int preferredWidth: VLCStyle.dp(480, VLCStyle.scale)
+
+    // playback, video, audio, subtitles
+    property int currentIndex: 0
+
+    readonly property var _tabs: [
+        qsTr("Playback"),
+        qsTr("Video"),
+        qsTr("Audio"),
+        qsTr("Subtitles")
+    ]
+
     spacing: 0
 
     focus: true
 
-    onActiveFocusChanged: if (activeFocus) playbackBtn.forceActiveFocus()
+    onActiveFocusChanged: if (activeFocus) tabBar.forceActiveFocus(Qt.TabFocusReason)
 
-    Widgets.ButtonExt {
-        id: playbackBtn
+    // Ctrl+Tab / Ctrl+Shift+Tab switch between the tabs, from anywhere in the page
+    Keys.onPressed: (event) => {
+        if (!(event.modifiers & Qt.ControlModifier))
+            return
 
-        text: qsTr("%1x").arg(+Player.rate.toFixed(2))
+        if (event.key === Qt.Key_Tab)
+            root.currentIndex = (root.currentIndex + 1) % _tabs.length
+        else if (event.key === Qt.Key_Backtab)
+            root.currentIndex = (root.currentIndex + _tabs.length - 1) % _tabs.length
+        else
+            return
 
-        onPressed: {
-            trackMenuController.requestPlaybackSpeedPage()
-        }
+        // keep a keyboard focus, otherwise the next keys are taken as hotkeys
+        Helpers.enforceFocus(tabBar.itemAt(root.currentIndex), Qt.TabFocusReason)
+        event.accepted = true
+    }
 
-        T.ToolTip.visible: (hovered || visualFocus)
-        T.ToolTip.text: qsTr("Playback Speed")
-        T.ToolTip.delay: VLCStyle.delayToolTipAppear
+    function _focusPage(reason) {
+        const page = pages.itemAt(pages.currentIndex)
 
-        Navigation.parentItem: root
-        Navigation.rightItem: row
-
-        Layout.alignment: Qt.AlignTop | Qt.AlignLeft
-        Layout.margins: VLCStyle.margin_large
+        if (page.setCurrentItemFocus)
+            page.setCurrentItemFocus(reason)
+        else
+            Helpers.enforceFocus(page, reason)
     }
 
     Widgets.NavigableRow {
-        id: row
+        id: tabBar
 
-        Layout.fillHeight: true
         Layout.fillWidth: true
 
-        Navigation.leftItem: playbackBtn
+        focus: true
+
+        Accessible.role: Accessible.PageTabList
+
+        Navigation.parentItem: root
+        Navigation.downAction: function() { root._focusPage(Qt.TabFocusReason) }
+
+        onActiveFocusChanged: {
+            if (activeFocus)
+                itemAt(root.currentIndex)?.forceActiveFocus(Qt.TabFocusReason)
+        }
+
+        Repeater {
+            model: root._tabs
+
+            delegate: Widgets.BannerTabButton {
+                required property int index
+                required property string modelData
+
+                width: tabBar.width / root._tabs.length
+                height: VLCStyle.dp(40, VLCStyle.scale)
+
+                text: modelData
+
+                selected: (index === root.currentIndex)
+
+                // the indicator is drawn by the tab bar
+                showCurrentIndicator: false
+
+                Accessible.role: Accessible.PageTab
+                Accessible.checkable: true
+                Accessible.checked: selected
+
+                onClicked: root.currentIndex = index
+            }
+        }
+    }
+
+    // underline of the active tab
+    Item {
+        Layout.fillWidth: true
+        Layout.preferredHeight: VLCStyle.heightBar_xxxsmall
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+
+            height: VLCStyle.margin_xxxsmall
+
+            color: theme.border
+        }
+
+        Rectangle {
+            x: root.currentIndex * width
+            width: parent.width / root._tabs.length
+            height: parent.height
+
+            color: theme.accent
+
+            Behavior on x {
+                SmoothedAnimation {
+                    duration: VLCStyle.duration_veryShort
+                    easing.type: Easing.InOutSine
+                }
+            }
+        }
+    }
+
+    StackLayout {
+        id: pages
+
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+
+        currentIndex: root.currentIndex
+
+        focus: true
+
+        Navigation.parentItem: root
+        Navigation.upItem: tabBar
+
+        FocusScope {
+            Navigation.parentItem: pages
+
+            PlaybackSpeed {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: VLCStyle.margin_large
+
+                focus: true
+
+                Navigation.parentItem: parent
+            }
+        }
 
         TrackColumn {
-            title: qsTr("Subtitle")
-            tracksModel: Player.subtitleTracks
-            menuIcon: VLCIcons.expand
-            menuText: qsTr("Menu")
-            onMenuAction: (menuPos)  => {
-                menuSubtitle.popup(menuPos)
+            title: qsTr("Video Tracks")
+            tracksModel: Player.videoTracks
+            menuIcon: VLCIcons.add
+            menuText: qsTr("Add")
+            onMenuAction: (menuPos) => {
+                DialogsProvider.loadVideoFile()
             }
         }
 
@@ -96,12 +209,12 @@ RowLayout {
         }
 
         TrackColumn {
-            title: qsTr("Video Tracks")
-            tracksModel: Player.videoTracks
-            menuIcon: VLCIcons.add
-            menuText: qsTr("Add")
-            onMenuAction: (menuPos) => {
-                DialogsProvider.loadVideoFile()
+            title: qsTr("Subtitle")
+            tracksModel: Player.subtitleTracks
+            menuIcon: VLCIcons.expand
+            menuText: qsTr("Menu")
+            onMenuAction: (menuPos)  => {
+                menuSubtitle.popup(menuPos)
             }
         }
     }
@@ -126,13 +239,14 @@ RowLayout {
 
         focus: true
 
-        width: row.width / 3
-        height: row.height
+        onActiveFocusChanged: if (activeFocus) Helpers.transferFocus(tracksList, focusReason)
 
-        onActiveFocusChanged: if (activeFocus) tracksList.forceActiveFocus(focusReason)
+        function setCurrentItemFocus(reason) {
+            tracksList.setCurrentItemFocus(reason)
+        }
 
         // this is required to initialize attached Navigation property
-        Navigation.parentItem: row
+        Navigation.parentItem: pages
 
         contentItem: Column {
             anchors.fill: parent
@@ -141,20 +255,6 @@ RowLayout {
 
             Accessible.role: Accessible.Pane
             Accessible.name: tracksListContainer.title
-
-            Item {
-                // keep it inside so "Column" doesn't mess with it
-               Rectangle {
-                   id: separator
-
-                   x: 0
-                   y: 0
-                   width: VLCStyle.margin_xxxsmall
-
-                   height: tracksListContainer.height
-                   color: theme.border
-               }
-            }
 
             Row {
                 id: titleHeader
@@ -165,7 +265,7 @@ RowLayout {
                 padding: VLCStyle.margin_xsmall
 
                 topPadding: VLCStyle.margin_large
-                leftPadding: VLCStyle.margin_xxlarge + separator.width
+                leftPadding: VLCStyle.margin_large
 
                 focus: true
 
@@ -206,7 +306,6 @@ RowLayout {
                 model: tracksListContainer.tracksModel
                 width: tracksListContainer.width
                 height: tracksListContainer.height - titleHeader.height
-                leftMargin: separator.width
                 focus: true
                 clip: !fadingEdge.implicitClipping && (height < contentHeight)
 
@@ -226,7 +325,7 @@ RowLayout {
 
                     focus: true
                     text: model.display
-                    width: tracksListContainer.width - VLCStyle.margin_xxxsmall
+                    width: tracksListContainer.width
                     height: VLCStyle.dp(40, VLCStyle.scale)
                     opacity: hovered || activeFocus || checked ? 1 : .6
                     font.weight: hovered
